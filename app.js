@@ -4,6 +4,8 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+const io = require('socket.io')(5000);
+
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
@@ -37,5 +39,18 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
+//-----------code after this-------------
+let game = {
+  Id: '',
+  addressPlayer1: '',
+  addressPlayer2: '',
+  socketIdPlayer1: '',
+  socketIdPlayer2: '',
+  contractAddress: ''
+}
+let games = []
+let numberOfGames = 0
+
 
 module.exports = app;

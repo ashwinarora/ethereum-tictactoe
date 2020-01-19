@@ -8,22 +8,33 @@
     <title>Ethereum TicTacToe</title>
 </head>
 <body>
-    <div class="main-content">
-        <h1>Ethereum TicTacToe</h1>
-        <button id="new-game">New Game</button>
-        <button id="join-game">Join Game</button>
+    <div id= "game-setup" class="main-content">
+        <h1>Ethereum TicTacToe Setup</h1>
+        <button id="metamask-button" class="hidden">Connect to Metamask</button>
+        <div id="metamask-error" class="hidden">Metamask not detected. Kindly install it.</div>
+        <button id="new-game-button" class="hidden">New Game</button>
+        <button id="join-game-button" class="hidden">Join Game</button>
 
-        <div class="hidden new-game-setup">
+        <div id="new-game-setup" class="hidden new-game-setup">
             <h3>Enter your bet in ETH?</h3>
             <input id="input-bet" type="number" placeholder="2.."/>
         </div>
-        <div class= "hidden join-game-setup">
+        <div id="join-game-setup" class= "hidden join-game-setup">
             <h3>Enter the Smart Contract Address</h3>
             <input id="input-address" type="text" placeholder="0x.."/>
         </div>
-        <button id="submit-button" class="hidden">Submit</button>
+        <button id="submit-button" type="submit" class="hidden">Submit</button>
+    </div>
+    <div id="game-play" class="hidden">
+        <h1>Ethereum TicTacToe Gameplay</h1>
     </div>
 
+    <script src="http://localhost:5000/socket.io/socket.io.js"></script> 
+    <script src="https://cdn.ethers.io/scripts/ethers-v4.min.js"
+        charset="utf-8"
+        type="text/javascript">
+    </script>
+    <script src="javascripts/contractData.js"></script>
     <script src="javascripts/index.js"></script>
 </body>
 </html>
