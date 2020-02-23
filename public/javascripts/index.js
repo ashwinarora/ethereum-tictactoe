@@ -1,5 +1,6 @@
-const socket = io.connect('http://localhost:5000')
+const socket = io.connect('http://localhost:5000');
 let provider
+const hiddenClass = 'hidden'
 
 let contract 
 let contractAddress
@@ -9,30 +10,27 @@ let contractWithSigner
 
 let signer
 let signerAddress
+let opponentAddress
 
 let gameId
 let escrow
 let isThisPlayer1
-
-let flatSign
-let expSign
 
 connectToMetamask()
 
 function connectToMetamask(){
     if(window.ethereum){
         const metamaskButton = document.getElementById('metamask-button')
-        metamaskButton.className = ''
+        metamaskButton.classList.remove(hiddenClass)
         metamaskButton.addEventListener('click', async () => {
             const accounts = await ethereum.enable()
-            metamaskButton.className = 'hidden'
+            metamaskButton.classList.add(hiddenClass)            
             provider = new ethers.providers.Web3Provider(web3.currentProvider);
-            document.getElementById('new-game-button').className = ''
-            document.getElementById('join-game-button').className = ''
+            document.getElementById('game-setup-buttons').classList.remove(hiddenClass)
             setListernes();
         })
     } else {
-        document.getElementById('metamask-error').className = ''
+        document.getElementById('metamask-error').classList.remove(hiddenClass)
     }
 }
 
@@ -48,66 +46,102 @@ function setListernes() {
         const overrides = {
             value: ethers.utils.parseEther(escrow)
         }
-        const tx = await contractWithSigner.joinGame(gameId, overrides)
-        const minnedTx = await tx.wait()
-        isThisPlayer1 = false
-        console.log('Transaction Successful. Game Joined')
-        socket.emit('game-joined', {
-            gameId: gameId,
-            addressPlayer2: signerAddress,
-            socketIdPlayer2: socket.Id
-        })
+        try{
+            cons t tx = await contractWithSigner.joinGame(gameId, overrides)
+            const minnedTx = await tx.wait()
+            isThisPlayer1 = false
+            console.log('Transaction Successful. Game Joined')
+            console.log(`addressPlayer2= ${signerAddress}`)
+            // WHY IS ADDRESSPLAYER2 NOT BEING EMITED?
+            socket.emit('game-joined', {
+                gameId: gameId,
+                addressPlayer2: signerAddress,
+                socketIdPlayer2: socket.Id
+            })
+        } catch(err){
+            console.log(err)
+        }
+        
+    })
+
+    socket.on('invalid-gameId', (msg) => {
+        console.log(msg)
+        document.getElementById('submit-button').disabled = false
+        document.getElementById('loader-animation').classList.add(hiddenClass)
+        document.getElementById('invalid-gameId-msg').classList.remove(hiddenClass)
     })
 
     socket.on('start-game', (data) => {
-        document.getElementById('game-setup').className = 'hidden'
-        document.getElementById('game-play').className = 'main-content'
-        //gamePlay()
+        console.log('entering game play')
+        if(isThisPlayer1){
+            opponentAddress = data.addressPlayer2
+            console.log(`Opponent= ${opponentAddress}`)
+        } else {
+            opponentAddress = data.addressPlayer1
+            console.log(`Opponent= ${opponentAddress}`)
+        }
+        document.getElementById('game-setup').classList.add(hiddenClass)
+        document.getElementById('game-play').classList.remove(hiddenClass)
+        setGamePlayListerners()
     })
     gameSetup()
 }
 
 function gameSetup(){
+    const gameSetup = document.getElementById('game-setup')
     const newGameButton = document.getElementById('new-game-button')
     const joinGameButton = document.getElementById('join-game-button')
     const newGameSetup =  document.getElementById('new-game-setup')
     const joinGameSetup =  document.getElementById('join-game-setup')
     const submitButton = document.getElementById('submit-button')
+    const inputBet = document.getElementById('input-bet')
+    const inputGameId = document.getElementById('input-gameId')
+    const gameIdDisplay = document.getElementById('game-id-display')
+    const invalidGameIdMsg = document.getElementById('invalid-gameId-msg')
+    const loaderAnimation = document.getElementById('loader-animation')
+    const metamaskRejectionMsg = document.getElementById('metamask-rejection-msg')
 
     newGameButton.addEventListener('click', ()=>{
         if(newGameSetup.className == 'new-game-setup'){
             // Hiding new game setup
             newGameSetup.className = 'hidden new-game-setup'
+            inputBet.value = null
             joinGameButton.disabled = false
-            submitButton.className = 'hidden'
+            submitButton.classList.add(hiddenClass)
+            invalidGameIdMsg.classList.add(hiddenClass)
+            loaderAnimation.classList.add(hiddenClass)
+            metamaskRejectionMsg.classList.add(hiddenClass)
         } else {
             // Showing new game setup
             newGameSetup.className = 'new-game-setup'
             joinGameButton.disabled = true
-            submitButton.className = ''
+            submitButton.classList.remove(hiddenClass)
         }
     })
 
     joinGameButton.addEventListener('click', () => {
         if(joinGameSetup.className == 'join-game-setup'){
             // Hiding join game setup
+            inputGameId.value = null
             joinGameSetup.className = 'hidden join-game-setup'
             newGameButton.disabled = false
-            submitButton.className = 'hidden'
+            submitButton.classList.add(hiddenClass)
+            invalidGameIdMsg.classList.add(hiddenClass)
+            loaderAnimation.classList.add(hiddenClass)
+            metamaskRejectionMsg.classList.add(hiddenClass)
         } else {
             // Showing join game setup
             joinGameSetup.className = 'join-game-setup'
             newGameButton.disabled = true
-            submitButton.className = ''
+            submitButton.classList.remove(hiddenClass)
         }
     })
 
     submitButton.addEventListener('click', async () => {
-        const inputBet = document.getElementById('input-bet')
-        const inputGameId = document.getElementById('input-gameId')
-        const gameIdDisplay = document.getElementById('game-id-display')
-        const loaderAnimation = document.getElementById('loader-animation')
-        loaderAnimation.className = 'loader'
+        invalidGameIdMsg.classList.add(hiddenClass)
+        metamaskRejectionMsg.classList.add(hiddenClass)
+        gameIdDisplay.classList.add(hiddenClass)
+        loaderAnimation.classList.remove(hiddenClass)
         submitButton.disabled = true
 
         try{
@@ -119,29 +153,44 @@ function gameSetup(){
             contract = new ethers.Contract(contractAddress, abi, provider)
             contractWithSigner = contract.connect(signer)
             if(!inputBet.value && inputGameId.value){
+                // join game case
                 gameId = inputGameId.value
                 socket.emit('player2-setup', {
                     gameId: gameId,
                     socketIdPlayer2: socket.id
                 })
             } else if (inputBet.value && !inputGameId.value) {
-                const overrides = {
-                    value: ethers.utils.parseEther(inputBet.value)
+                // new game case
+                try{
+                    const overrides = {
+                        value: ethers.utils.parseEther(inputBet.value)
+                    }
+                    const tx = await contractWithSigner.newGame(overrides)
+                    const minnedTx = await tx.wait()
+                    gameId = parseInt(ethers.utils.hexlify(minnedTx.events[0].args.gameId))
+                    escrow = inputBet.value
+                    isThisPlayer1 = true
+                    console.log(`Transaction Successful, Game ID= ${gameId}`)
+                    // consider removing socket id incase it does not turn out to be useful
+                    socket.emit('new-game-created', {
+                        gameId: gameId,
+                        addressPlayer1: signerAddress,
+                        escrow: escrow,
+                        socketIdPlayer1: socket.id
+                    })
+                    loaderAnimation.classList.add(hiddenClass)
+                    metamaskRejectionMsg.classList.add(hiddenClass)
+                    invalidGameIdMsg.classList.add(hiddenClass)
+                    gameIdDisplay.classList.remove(hiddenClass)
+                    document.getElementById('game-id-alert').innerHTML = `<strong>Success!</strong> Game ID= ${parseInt(ethers.utils.hexlify(minnedTx.events[0].args.gameId))}`
+                } catch (err) {
+                    console.log(err)
+                    loaderAnimation.classList.add(hiddenClass)
+                    gameIdDisplay.classList.add(hiddenClass)
+                    invalidGameIdMsg.classList.add(hiddenClass)
+                    submitButton.disabled = false
+                    metamaskRejectionMsg.classList.remove(hiddenClass)
                 }
-                const tx = await contractWithSigner.newGame(overrides)
-                const minnedTx = await tx.wait()
-                gameId = parseInt(ethers.utils.hexlify(minnedTx.events[0].args.gameId))
-                escrow = inputBet.value
-                isThisPlayer1 = true
-                console.log(`Transaction Successful, Game ID= ${gameId}`)
-                // consider removing socket id incase it does not turn out to be useful
-                socket.emit('new-game-created', {
-                    gameId: gameId,
-                    addressPlayer1: signerAddress,
-                    escrow: escrow,
-                    socketIdPlayer1: socket.id
-                })
-                gameIdDisplay.innerHTML = `Game ID = ${parseInt(ethers.utils.hexlify(minnedTx.events[0].args.gameId))}`
             }
         }catch(err){
             console.log(err)
@@ -149,4 +198,305 @@ function gameSetup(){
             loaderAnimation.className = 'loader hidden'
         }
     })
+}
+
+
+// --------------GamePlay Code Below-------------
+
+const xClass = 'x'
+const circleClass = 'circle'
+const waitingClass = 'waiting'
+const moveMsg = document.getElementById('make-move-msg')
+const waitMsg = document.getElementById('wait-msg')
+const invalidSignMsg = document.getElementById('invalid-sign-msg')
+const claimPotButton = document.getElementById('claim-pot-button')
+let myTurn
+const WINNING_COMBINATIONS = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6]
+]
+
+const cellElements = document.querySelectorAll('[data-cell]')
+const board = document.getElementById('board')
+let circleTurn
+
+let myClass
+let opponentClass
+
+function setGamePlayListerners(){
+    console.log(cellElements)
+    myClass = isThisPlayer1 ? xClass : circleClass
+    opponentClass = isThisPlayer1 ? circleClass : xClass
+
+    // if condition to set waiting class in the very begining of game play
+    if(isThisPlayer1){
+        removeWaitClass()
+        myTurn = true
+        board.classList.add(xClass)
+        showMoveMsg()
+    } else {
+        addWaitClass()
+        myTurn = false
+        board.classList.add(circleClass)
+        showWaitMsg()
+    }
+
+    cellElements.forEach(cell => {
+        cell.addEventListener('click', handleClick, { once: true })
+    })
+
+    socket.on('opponent-move', async (move) => {
+        if(isThisPlayer1 !== move.isThisPlayer1){
+            const signAddress = await contract.verifyString(move.cellId, move.signature.v, move.signature.r, move.signature.s)
+            if(signAddress === opponentAddress){
+                const cell = document.getElementById(move.cellId)
+                cell.classList.add(opponentClass)
+                myTurn = true
+                socket.emit('move-verified', {
+                    gameId:gameId,
+                    isThisPlayer1:isThisPlayer1
+                })
+                removeWaitClass()
+                showMoveMsg()
+            } else {
+                console.log('Signature Invalid')
+                socket.emit('signature-invalid', {
+                    gameId: gameId,
+                    isThisPlayer1: isThisPlayer1,
+                    cellId: move.cellId
+                })
+            }
+        }
+    })
+
+    socket.on('rectify-signature', (data) => {
+        if(isThisPlayer1 !== data.isThisPlayer1){
+            const cell = document.getElementById(data.cellId)
+            cell.classList.remove(myClass)
+            removeAndAddClickListener(cell)
+            removeWaitClass()
+            showInvalidSignMsg()
+        }
+    })
+
+    socket.on('verify-victory', async (move) => {
+        if(isThisPlayer1 !== move.isThisPlayer1){
+            const signAddress = await contract.verifyString(move.cellId, move.signature.v, move.signature.r, move.signature.s)
+            if(signAddress === opponentAddress){
+                const cell = document.getElementById(move.cellId)
+                cell.classList.add(opponentClass)
+                if(checkWin(opponentClass)){
+                    socket.emit('accept-defeat', {
+                        gameId: gameId,
+                        isThisPlayer1: isThisPlayer1,
+                        address: signerAddress
+                    })
+                } else if(isDraw()) {
+                    console.log('Draw')
+                } else {
+                    console.log('Continue Game')
+                }
+            } else {
+                console.log('Signature Invalid')
+                socket.emit('signature-invalid', {
+                    gameId: gameId,
+                    isThisPlayer1: isThisPlayer1,
+                    cellId: move.cellId
+                })
+            }
+        }
+    })
+
+    socket.on('game-over-victory', (data) => {
+        if(isThisPlayer1 !== data.isThisPlayer1){
+            document.getElementById('game-play').classList.add(hiddenClass)
+            document.getElementById('game-over').classList.remove(hiddenClass)
+            document.getElementById('victory-msg').classList.remove(hiddenClass)
+        } else {
+            document.getElementById('game-play').classList.add(hiddenClass)
+            document.getElementById('game-over').classList.remove(hiddenClass)
+            document.getElementById('defeat-msg').classList.remove(hiddenClass)
+        }
+    })
+
+    socket.on('verify-draw', async (move) => {
+        if(isThisPlayer1 !== move.isThisPlayer1){
+            const signAddress = await contract.verifyString(move.cellId, move.signature.v, move.signature.r, move.signature.s)
+            if(signAddress === opponentAddress){
+                const cell = document.getElementById(move.cellId)
+                cell.classList.add(opponentClass)
+                if(isDraw()){
+                    socket.emit('confirm-draw', {
+                        gameId: gameId,
+                        isThisPlayer1: isThisPlayer1,
+                    })
+                } else {
+                    console.log('not a draw')
+                }
+            } else {
+                console.log('Signature Invalid')
+                socket.emit('signature-invalid', {
+                    gameId: gameId,
+                    isThisPlayer1: isThisPlayer1,
+                    cellId: move.cellId
+                })
+            }
+        }
+    })
+
+    socket.on('game-over-draw', (data) => {
+        document.getElementById('game-play').classList.add(hiddenClass)
+        document.getElementById('game-over').classList.remove(hiddenClass)
+        document.getElementById('draw-msg').classList.remove(hiddenClass)
+    })
+
+    claimPotButton.addEventListener('click', () => {
+        socket.emit('claim-pot', {
+            gameId: gameId,
+            isThisPlayer1: isThisPlayer1
+        })
+    })
+    socket.on('game-over-absconded', (data) => {
+        if(isThisPlayer1 !== data.isThisPlayer1){
+            document.getElementById('game-play').classList.add(hiddenClass)
+            document.getElementById('game-over').classList.remove(hiddenClass)
+            document.getElementById('victory-msg').classList.remove(hiddenClass)
+        } else {
+            document.getElementById('game-play').classList.add(hiddenClass)
+            document.getElementById('game-over').classList.remove(hiddenClass)
+            document.getElementById('defeat-msg').classList.remove(hiddenClass)
+        }
+    })
+}
+
+async function handleClick(event){
+    const cell = event.target
+    if(myTurn){
+        console.log(`clicked ${cell.id}`)
+        cell.classList.add(myClass)
+        addWaitClass()
+        if(checkWin(myClass)){
+            console.log('WINNER')
+            try{
+                const flatSign = await signer.signMessage(cell.id)
+                const expSign = ethers.utils.splitSignature(flatSign)
+                socket.emit('claim-victory', {
+                    gameId: gameId,
+                    isThisPlayer1: isThisPlayer1,
+                    cellId: cell.id,
+                    signature: expSign
+                })
+                myTurn = false
+                showWaitMsg()
+            } catch (err) {
+                console.log(err)
+                cell.classList.remove(myClass)
+                removeAndAddClickListener(cell)
+                removeWaitClass()
+                showInvalidSignMsg()
+            }
+        } else if(isDraw()){
+            console.log('DRAW')
+            try{
+                const flatSign = await signer.signMessage(cell.id)
+                const expSign = ethers.utils.splitSignature(flatSign)
+                socket.emit('declare-draw', {
+                    gameId: gameId,
+                    isThisPlayer1: isThisPlayer1,
+                    cellId: cell.id,
+                    signature: expSign
+                })
+                myTurn = false
+                showWaitMsg()
+            } catch(err) {
+                console.log(err)
+                cell.classList.remove(myClass)
+                removeAndAddClickListener(cell)
+                removeWaitClass()
+                showInvalidSignMsg()
+            }
+        } else {
+            console.log('Game Continue')
+            try{
+                // signer = await provider.getSigner()
+                const flatSign = await signer.signMessage(cell.id)
+                const expSign = ethers.utils.splitSignature(flatSign)
+                socket.emit('move-made',{
+                    gameId: gameId,
+                    isThisPlayer1: isThisPlayer1,
+                    cellId: cell.id,
+                    signature: expSign
+                })
+                myTurn = false
+                showWaitMsg()
+            } catch(err) {
+                console.log(err)
+                cell.classList.remove(myClass)
+                removeAndAddClickListener(cell)
+                removeWaitClass()
+                showInvalidSignMsg()
+            }
+        }        
+
+    } else {
+        removeAndAddClickListener(cell)
+    }
+}
+
+function checkWin(checkClass) {
+    return WINNING_COMBINATIONS.some(combination => {
+        return combination.every(index => {
+            return cellElements[index].classList.contains(checkClass)
+        })
+    })
+}
+
+function isDraw() {
+    return [...cellElements].every(cell => {
+        return cell.classList.contains(xClass) || cell.classList.contains(circleClass)
+    })
+}
+
+// helper functions below
+function addWaitClass(){
+    cellElements.forEach(ce => {
+        ce.classList.add(waitingClass)
+    })
+}
+
+function removeWaitClass(){
+    cellElements.forEach(ce => {
+        ce.classList.remove(waitingClass)
+    })
+}
+
+function removeAndAddClickListener(cell){
+    cell.removeEventListener('click', handleClick)
+    cell.addEventListener('click', handleClick, { once: true })
+}
+
+function showMoveMsg(){
+    waitMsg.classList.add(hiddenClass)
+    invalidSignMsg.classList.add(hiddenClass)
+    claimPotButton.classList.add(hiddenClass)
+    moveMsg.classList.remove(hiddenClass)
+}
+
+function showWaitMsg(){
+    moveMsg.classList.add(hiddenClass)
+    invalidSignMsg.classList.add(hiddenClass)
+    claimPotButton.classList.remove(hiddenClass)
+    waitMsg.classList.remove(hiddenClass)
+}
+
+function showInvalidSignMsg(){
+    waitMsg.classList.add(hiddenClass)
+    moveMsg.classList.add(hiddenClass)
+    invalidSignMsg.classList.remove(hiddenClass)
 }

@@ -52,17 +52,27 @@ const signer = new ethers.Wallet(privateKey, provider);
 let contract
 let contractAddress
 
+// consts based on the enum in the contract
+const active = 1
+const draw = 2
+const player1Wins = 3
+const player2Wins = 4
+const player1Absconded = 5
+const player2Absconded = 6
+
 let game = {
-    Id: '',
+    id: '',
     addressPlayer1: '',
     addressPlayer2: '',
     socketIdPlayer1: '',
     socketIdPlayer2: '',
     escrow: '',
-    result: ''
+    result: '',
 }
 let games = []
 let numberOfGames = 0
+const timeout = 60000 // 1 minutes
+//const date = new Date()
 
 deployContract()
 
@@ -76,6 +86,8 @@ async function deployContract() {
         await contract.deployed()
         console.log(`Contract Deployed Successfully- ${contractAddress}`)
         contract = new ethers.Contract(contractAddress, contractData.abi, provider)
+
+        // console.log('Contract Deployment Code Commented Out')
     } catch (err) {
         console.log(err)
     }
@@ -85,7 +97,7 @@ io.on('connection', function(socket){
     socket.on('request-contract-data', () => {
         // you may want to remore bytecode below as it probably won't be used in index.js.
         // if you decide to remove bytecode from index.js, make sure you remove it from everywhere
-        console.log('emiting contract data')
+        console.log('Incoming New Game Request')
         socket.emit('contract-data', {
             abi: contractData.abi,
             bytecode: contractData.bytecode,
@@ -95,37 +107,164 @@ io.on('connection', function(socket){
 
     socket.on('new-game-created', (newGameData) => {
         numberOfGames++
-        game.id = newGameData.gameId
-        game.addressPlayer1 = newGameData.addressPlayer1
-        game.escrow = newGameData.escrow
-        game.socketIdPlayer1 = newGameData.socketIdPlayer1
-        games.push(game)
-        socket.join(`gameId${game.id}`)
-        console.log('new game created')
+        games.push({
+            id: newGameData.gameId,
+            addressPlayer1: newGameData.addressPlayer1,
+            escrow: newGameData.escrow,
+            socketIdPlayer1: newGameData.socketIdPlayer1,
+            result: 'waiting-for-player2',
+            timestamp: Date.now()
+        })
+        socket.join(`gameId${newGameData.gameId}`)
+        console.log('New Game Created')
     })
 
     socket.on('player2-setup', (joinGameData) => {
-        const gameIndex = joinGameData.gameId - 1; // index of the games array
-        console.log(`gameIndex= ${gameIndex}`)
+        const gameIndex = joinGameData.gameId - 1 // index of the games array
+        console.log(`Game Join Request, Index=${gameIndex}`)
         // checking if player2 has already joined
-        if(!games[gameIndex].addressPLayer2){
-            socket.emit('join-game-data', {
-                escrow: games[gameIndex].escrow
-            })
-        } else {
+        try {
+            console.log(`addressPlayer2= ${games[gameIndex].addressPlayer2}`)
+            console.log(games[gameIndex])
+            console.log(games)
+            if (!games[gameIndex].addressPlayer2) {
+                socket.emit('join-game-data', {
+                    escrow: games[gameIndex].escrow
+                })
+            } else {
+                console.log('Invalid Game ID')
+                socket.emit('invalid-gameId', 'game room is full')
+            }
+        } catch (err) {
+            console.log(err)
+            console.log('Invalid Game ID')
             socket.emit('invalid-gameId', 'game room is full')
         }
     })
 
     socket.on('game-joined', (dataPlayer2) => {
-        const gameIndex = dataPlayer2.gameId - 1; // index of the games array
-        if(!games[gameIndex].addressPLayer2){
-            games[gameIndex].addressPLayer2 = dataPlayer2.addressPLayer2
+        const gameIndex = dataPlayer2.gameId - 1 // index of the games array
+        if (!games[gameIndex].addressPlayer2) {
+            console.log(`player2= ${dataPlayer2.addressPlayer2}`)
+            games[gameIndex].addressPlayer2 = dataPlayer2.addressPlayer2
             games[gameIndex].socketIdPlayer2 = dataPlayer2.socketIdPlayer2
+            games[gameIndex].result = 'active'
+            games[gameIndex].timestamp = Date.now()
+            console.log(`timestamp= ${games[gameIndex].timestamp}`)
             socket.join(`gameId${games[gameIndex].id}`)
-            io.to(`gameId${games[gameIndex].id}`).emit('start-game')
+            io.to(`gameId${games[gameIndex].id}`).emit('start-game', {
+                addressPlayer1: games[gameIndex].addressPlayer1,
+                addressPlayer2: games[gameIndex].addressPlayer2
+            })
         } else {
-            console.log('Unexpected Error. All is Lost. et tu brute')
+            console.log('Unexpected Error. All is Lost. et tu brutus')
+        }
+    })
+
+    socket.on('move-made', (move) => {
+        const gameIndex = move.gameId - 1
+        if (games[gameIndex].result === 'active') {
+            io.to(`gameId${games[gameIndex].id}`).emit('opponent-move', move)
+        } else {
+            console.log('Unexpected Error. Game not Active.')
+        }
+    })
+
+    socket.on('move-verified', (data) => {
+        const gameIndex = data.gameId - 1
+        console.log(`Old TimeStamp= ${date.toTimeString(Date.now())}`)
+        games[gameIndex].timestamp = Date.now()
+        console.log(`New TimeStamp= ${date.toTimeString(games[gameIndex].timestamp)}`)
+    })
+
+    socket.on('singature-invalid', (data) => {
+        const gameIndex = data.gameId - 1
+        io.to(`gameId${games[gameIndex].id}`).emit('rectify-signature', data)
+    })
+
+    socket.on('claim-victory', (move) => {
+        const gameIndex = move.gameId - 1
+        if (games[gameIndex].result === 'active') {
+            io.to(`gameId${games[gameIndex].id}`).emit('verify-victory', move)
+        } else {
+            console.log('Unexpected Error. Game not Active.')
+        }
+    })
+
+    socket.on('accept-defeat', async (data) => {
+        const gameIndex = data.gameId - 1
+        io.to(`gameId${games[gameIndex].id}`).emit('game-over-victory', data)
+        const contractWithSigner = contract.connect(signer)
+        try {
+            if (data.isThisPlayer1) {
+                console.log('endGame: player2Wins')
+                const tx = await contractWithSigner.endGame(data.gameId, player2Wins)
+                await tx.wait()
+                console.log(`Transaction Successful, Player 2 Wins: ${tx.hash}`)
+                games[gameIndex].timestamp = Date.now()
+                games[gameIndex].result = 'player2Wins'
+            } else {
+                console.log('endGame: player1Wins')
+                const tx = await contractWithSigner.endGame(data.gameId, player1Wins)
+                await tx.wait()
+                console.log(`Transaction Successful, Player 1 Wins: ${tx.hash}`)
+                games[gameIndex].timestamp = Date.now()
+                games[gameIndex].result = 'player1Wins'
+            }
+        } catch (err) {
+            console.log(err)
+        }
+    })
+
+    socket.on('declare-draw', async (move) => {
+        const gameIndex = move.gameId - 1
+        if (games[gameIndex].result === 'active') {
+            io.to(`gameId${games[gameIndex].id}`).emit('verify-draw', move)
+        } else {
+            console.log('Unexpected Error. Game not Active.')
+        }
+    })
+
+    socket.on('confirm-draw', async (data) => {
+        const gameIndex = data.gameId - 1
+        try {
+            io.to(`gameId${games[gameIndex].id}`).emit('game-over-draw', data)
+            const contractWithSigner = contract.connect(signer)
+            const tx = await contractWithSigner.endGame(data.gameId, draw)
+            await tx.wait()
+            console.log(`Transaction Successful, Draw: ${tx.hash}`)
+            games[gameIndex].timestamp = Date.now()
+            games[gameIndex].result = 'draw'
+        } catch (err) {
+            console.log(err)
+        }
+    })
+
+    socket.on('claim-pot', async (data) => {
+        const gameIndex = data.gameId - 1
+        if (Date.now() - games[gameIndex].timestamp > timeout) {
+            console.log('Player Absconded')
+            io.to(`gameId${games[gameIndex].id}`).emit('game-over-absconded', data)
+            const contractWithSigner = contract.connect(signer)
+            try {
+                if (data.isThisPlayer1) {
+                    const tx = await contractWithSigner.endGame(data.gameId, player2Wins)
+                    await tx.wait()
+                    console.log(`Transaction Successful, Player 2 Wins: ${tx.hash}`)
+                    games[gameIndex].timestamp = Date.now()
+                    games[gameIndex].result = 'player2Wins'
+                } else {
+                    const tx = await contractWithSigner.endGame(data.gameId, player1Wins)
+                    await tx.wait()
+                    console.log(`Transaction Successful, Player 1 Wins: ${tx.hash}`)
+                    games[gameIndex].timestamp = Date.now()
+                    games[gameIndex].result = 'player1Wins'
+                }
+            } catch (err) {
+                console.log(err)
+            }
+        } else {
+            console.log('Premature Claimation!')
         }
     })
 })
