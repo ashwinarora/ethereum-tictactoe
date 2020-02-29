@@ -72,7 +72,6 @@ let game = {
 let games = []
 let numberOfGames = 0
 const timeout = 60000 // 1 minutes
-//const date = new Date()
 
 deployContract()
 
@@ -172,9 +171,8 @@ io.on('connection', function(socket){
 
     socket.on('move-verified', (data) => {
         const gameIndex = data.gameId - 1
-        console.log(`Old TimeStamp= ${date.toTimeString(Date.now())}`)
         games[gameIndex].timestamp = Date.now()
-        console.log(`New TimeStamp= ${date.toTimeString(games[gameIndex].timestamp)}`)
+        console.log(`Old TimeStamp= ${new Date().toTimeString()}`)
     })
 
     socket.on('singature-invalid', (data) => {
@@ -248,17 +246,17 @@ io.on('connection', function(socket){
             const contractWithSigner = contract.connect(signer)
             try {
                 if (data.isThisPlayer1) {
-                    const tx = await contractWithSigner.endGame(data.gameId, player2Wins)
-                    await tx.wait()
-                    console.log(`Transaction Successful, Player 2 Wins: ${tx.hash}`)
-                    games[gameIndex].timestamp = Date.now()
-                    games[gameIndex].result = 'player2Wins'
-                } else {
                     const tx = await contractWithSigner.endGame(data.gameId, player1Wins)
                     await tx.wait()
                     console.log(`Transaction Successful, Player 1 Wins: ${tx.hash}`)
                     games[gameIndex].timestamp = Date.now()
                     games[gameIndex].result = 'player1Wins'
+                } else {
+                    const tx = await contractWithSigner.endGame(data.gameId, player2Wins)
+                    await tx.wait()
+                    console.log(`Transaction Successful, Player 2 Wins: ${tx.hash}`)
+                    games[gameIndex].timestamp = Date.now()
+                    games[gameIndex].result = 'player2Wins'
                 }
             } catch (err) {
                 console.log(err)

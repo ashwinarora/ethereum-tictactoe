@@ -47,7 +47,7 @@ function setListernes() {
             value: ethers.utils.parseEther(escrow)
         }
         try{
-            cons t tx = await contractWithSigner.joinGame(gameId, overrides)
+            const tx = await contractWithSigner.joinGame(gameId, overrides)
             const minnedTx = await tx.wait()
             isThisPlayer1 = false
             console.log('Transaction Successful. Game Joined')
@@ -142,6 +142,8 @@ function gameSetup(){
         metamaskRejectionMsg.classList.add(hiddenClass)
         gameIdDisplay.classList.add(hiddenClass)
         loaderAnimation.classList.remove(hiddenClass)
+        newGameButton.disabled = true
+        joinGameButton.disabled = true
         submitButton.disabled = true
 
         try{
@@ -195,6 +197,8 @@ function gameSetup(){
         }catch(err){
             console.log(err)
             submitButton.disabled = false
+            newGameButton.disabled = false
+            joinGameButton.disabled = false
             loaderAnimation.className = 'loader hidden'
         }
     })
@@ -362,15 +366,16 @@ function setGamePlayListerners(){
             isThisPlayer1: isThisPlayer1
         })
     })
+
     socket.on('game-over-absconded', (data) => {
         if(isThisPlayer1 !== data.isThisPlayer1){
             document.getElementById('game-play').classList.add(hiddenClass)
             document.getElementById('game-over').classList.remove(hiddenClass)
-            document.getElementById('victory-msg').classList.remove(hiddenClass)
+            document.getElementById('defeat-msg').classList.remove(hiddenClass)
         } else {
             document.getElementById('game-play').classList.add(hiddenClass)
             document.getElementById('game-over').classList.remove(hiddenClass)
-            document.getElementById('defeat-msg').classList.remove(hiddenClass)
+            document.getElementById('victory-msg').classList.remove(hiddenClass)
         }
     })
 }
