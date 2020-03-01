@@ -2,7 +2,7 @@ const socket = io.connect('http://localhost:5000');
 let provider
 const hiddenClass = 'hidden'
 
-let contract 
+let contract
 let contractAddress
 let abi
 let bytecode
@@ -18,13 +18,13 @@ let isThisPlayer1
 
 connectToMetamask()
 
-function connectToMetamask(){
-    if(window.ethereum){
+function connectToMetamask() {
+    if (window.ethereum) {
         const metamaskButton = document.getElementById('metamask-button')
         metamaskButton.classList.remove(hiddenClass)
         metamaskButton.addEventListener('click', async () => {
             const accounts = await ethereum.enable()
-            metamaskButton.classList.add(hiddenClass)            
+            metamaskButton.classList.add(hiddenClass)
             provider = new ethers.providers.Web3Provider(web3.currentProvider);
             document.getElementById('game-setup-buttons').classList.remove(hiddenClass)
             setListernes();
@@ -46,7 +46,7 @@ function setListernes() {
         const overrides = {
             value: ethers.utils.parseEther(escrow)
         }
-        try{
+        try {
             const tx = await contractWithSigner.joinGame(gameId, overrides)
             const minnedTx = await tx.wait()
             isThisPlayer1 = false
@@ -58,10 +58,10 @@ function setListernes() {
                 addressPlayer2: signerAddress,
                 socketIdPlayer2: socket.Id
             })
-        } catch(err){
+        } catch (err) {
             console.log(err)
         }
-        
+
     })
 
     socket.on('invalid-gameId', (msg) => {
@@ -73,7 +73,7 @@ function setListernes() {
 
     socket.on('start-game', (data) => {
         console.log('entering game play')
-        if(isThisPlayer1){
+        if (isThisPlayer1) {
             opponentAddress = data.addressPlayer2
             console.log(`Opponent= ${opponentAddress}`)
         } else {
@@ -87,12 +87,12 @@ function setListernes() {
     gameSetup()
 }
 
-function gameSetup(){
+function gameSetup() {
     const gameSetup = document.getElementById('game-setup')
     const newGameButton = document.getElementById('new-game-button')
     const joinGameButton = document.getElementById('join-game-button')
-    const newGameSetup =  document.getElementById('new-game-setup')
-    const joinGameSetup =  document.getElementById('join-game-setup')
+    const newGameSetup = document.getElementById('new-game-setup')
+    const joinGameSetup = document.getElementById('join-game-setup')
     const submitButton = document.getElementById('submit-button')
     const inputBet = document.getElementById('input-bet')
     const inputGameId = document.getElementById('input-gameId')
@@ -101,8 +101,8 @@ function gameSetup(){
     const loaderAnimation = document.getElementById('loader-animation')
     const metamaskRejectionMsg = document.getElementById('metamask-rejection-msg')
 
-    newGameButton.addEventListener('click', ()=>{
-        if(newGameSetup.className == 'new-game-setup'){
+    newGameButton.addEventListener('click', () => {
+        if (newGameSetup.className == 'new-game-setup') {
             // Hiding new game setup
             newGameSetup.className = 'hidden new-game-setup'
             inputBet.value = null
@@ -120,7 +120,7 @@ function gameSetup(){
     })
 
     joinGameButton.addEventListener('click', () => {
-        if(joinGameSetup.className == 'join-game-setup'){
+        if (joinGameSetup.className == 'join-game-setup') {
             // Hiding join game setup
             inputGameId.value = null
             joinGameSetup.className = 'hidden join-game-setup'
@@ -146,7 +146,7 @@ function gameSetup(){
         joinGameButton.disabled = true
         submitButton.disabled = true
 
-        try{
+        try {
             socket.emit('request-contract-data')
             signer = await provider.getSigner()
             signerAddress = await signer.getAddress()
@@ -154,7 +154,7 @@ function gameSetup(){
             console.log(contractAddress)
             contract = new ethers.Contract(contractAddress, abi, provider)
             contractWithSigner = contract.connect(signer)
-            if(!inputBet.value && inputGameId.value){
+            if (!inputBet.value && inputGameId.value) {
                 // join game case
                 gameId = inputGameId.value
                 socket.emit('player2-setup', {
@@ -163,7 +163,7 @@ function gameSetup(){
                 })
             } else if (inputBet.value && !inputGameId.value) {
                 // new game case
-                try{
+                try {
                     const overrides = {
                         value: ethers.utils.parseEther(inputBet.value)
                     }
@@ -194,7 +194,7 @@ function gameSetup(){
                     metamaskRejectionMsg.classList.remove(hiddenClass)
                 }
             }
-        }catch(err){
+        } catch (err) {
             console.log(err)
             submitButton.disabled = false
             newGameButton.disabled = false
@@ -213,8 +213,11 @@ const waitingClass = 'waiting'
 const moveMsg = document.getElementById('make-move-msg')
 const waitMsg = document.getElementById('wait-msg')
 const invalidSignMsg = document.getElementById('invalid-sign-msg')
+const countDownTime = document.getElementById('countdown-timer')
 const claimPotButton = document.getElementById('claim-pot-button')
 let myTurn
+let timer
+const timeout = 60000 // 60 seconds
 const WINNING_COMBINATIONS = [
     [0, 1, 2],
     [3, 4, 5],
@@ -233,13 +236,13 @@ let circleTurn
 let myClass
 let opponentClass
 
-function setGamePlayListerners(){
+function setGamePlayListerners() {
     console.log(cellElements)
     myClass = isThisPlayer1 ? xClass : circleClass
     opponentClass = isThisPlayer1 ? circleClass : xClass
 
     // if condition to set waiting class in the very begining of game play
-    if(isThisPlayer1){
+    if (isThisPlayer1) {
         removeWaitClass()
         myTurn = true
         board.classList.add(xClass)
@@ -255,18 +258,21 @@ function setGamePlayListerners(){
         cell.addEventListener('click', handleClick, { once: true })
     })
 
+    resetTimer()
+
     socket.on('opponent-move', async (move) => {
-        if(isThisPlayer1 !== move.isThisPlayer1){
+        if (isThisPlayer1 !== move.isThisPlayer1) {
             const signAddress = await contract.verifyString(move.cellId, move.signature.v, move.signature.r, move.signature.s)
-            if(signAddress === opponentAddress){
+            if (signAddress === opponentAddress) {
                 const cell = document.getElementById(move.cellId)
                 cell.classList.add(opponentClass)
                 myTurn = true
                 socket.emit('move-verified', {
-                    gameId:gameId,
-                    isThisPlayer1:isThisPlayer1
+                    gameId: gameId,
+                    isThisPlayer1: isThisPlayer1
                 })
                 removeWaitClass()
+                resetTimer()
                 showMoveMsg()
             } else {
                 console.log('Signature Invalid')
@@ -280,28 +286,29 @@ function setGamePlayListerners(){
     })
 
     socket.on('rectify-signature', (data) => {
-        if(isThisPlayer1 !== data.isThisPlayer1){
+        if (isThisPlayer1 !== data.isThisPlayer1) {
             const cell = document.getElementById(data.cellId)
             cell.classList.remove(myClass)
             removeAndAddClickListener(cell)
+            endCountDown()
             removeWaitClass()
             showInvalidSignMsg()
         }
     })
 
     socket.on('verify-victory', async (move) => {
-        if(isThisPlayer1 !== move.isThisPlayer1){
+        if (isThisPlayer1 !== move.isThisPlayer1) {
             const signAddress = await contract.verifyString(move.cellId, move.signature.v, move.signature.r, move.signature.s)
-            if(signAddress === opponentAddress){
+            if (signAddress === opponentAddress) {
                 const cell = document.getElementById(move.cellId)
                 cell.classList.add(opponentClass)
-                if(checkWin(opponentClass)){
+                if (checkWin(opponentClass)) {
                     socket.emit('accept-defeat', {
                         gameId: gameId,
                         isThisPlayer1: isThisPlayer1,
                         address: signerAddress
                     })
-                } else if(isDraw()) {
+                } else if (isDraw()) {
                     console.log('Draw')
                 } else {
                     console.log('Continue Game')
@@ -318,7 +325,7 @@ function setGamePlayListerners(){
     })
 
     socket.on('game-over-victory', (data) => {
-        if(isThisPlayer1 !== data.isThisPlayer1){
+        if (isThisPlayer1 !== data.isThisPlayer1) {
             document.getElementById('game-play').classList.add(hiddenClass)
             document.getElementById('game-over').classList.remove(hiddenClass)
             document.getElementById('victory-msg').classList.remove(hiddenClass)
@@ -330,12 +337,12 @@ function setGamePlayListerners(){
     })
 
     socket.on('verify-draw', async (move) => {
-        if(isThisPlayer1 !== move.isThisPlayer1){
+        if (isThisPlayer1 !== move.isThisPlayer1) {
             const signAddress = await contract.verifyString(move.cellId, move.signature.v, move.signature.r, move.signature.s)
-            if(signAddress === opponentAddress){
+            if (signAddress === opponentAddress) {
                 const cell = document.getElementById(move.cellId)
                 cell.classList.add(opponentClass)
-                if(isDraw()){
+                if (isDraw()) {
                     socket.emit('confirm-draw', {
                         gameId: gameId,
                         isThisPlayer1: isThisPlayer1,
@@ -368,27 +375,27 @@ function setGamePlayListerners(){
     })
 
     socket.on('game-over-absconded', (data) => {
-        if(isThisPlayer1 !== data.isThisPlayer1){
+        if (isThisPlayer1 !== data.isThisPlayer1) {
             document.getElementById('game-play').classList.add(hiddenClass)
             document.getElementById('game-over').classList.remove(hiddenClass)
-            document.getElementById('defeat-msg').classList.remove(hiddenClass)
+            document.getElementById('defeat-msg-abscond').classList.remove(hiddenClass)
         } else {
             document.getElementById('game-play').classList.add(hiddenClass)
             document.getElementById('game-over').classList.remove(hiddenClass)
-            document.getElementById('victory-msg').classList.remove(hiddenClass)
+            document.getElementById('victory-msg-abscond').classList.remove(hiddenClass)
         }
     })
 }
 
-async function handleClick(event){
+async function handleClick(event) {
     const cell = event.target
-    if(myTurn){
+    if (myTurn) {
         console.log(`clicked ${cell.id}`)
         cell.classList.add(myClass)
         addWaitClass()
-        if(checkWin(myClass)){
+        if (checkWin(myClass)) {
             console.log('WINNER')
-            try{
+            try {
                 const flatSign = await signer.signMessage(cell.id)
                 const expSign = ethers.utils.splitSignature(flatSign)
                 socket.emit('claim-victory', {
@@ -406,9 +413,9 @@ async function handleClick(event){
                 removeWaitClass()
                 showInvalidSignMsg()
             }
-        } else if(isDraw()){
+        } else if (isDraw()) {
             console.log('DRAW')
-            try{
+            try {
                 const flatSign = await signer.signMessage(cell.id)
                 const expSign = ethers.utils.splitSignature(flatSign)
                 socket.emit('declare-draw', {
@@ -419,7 +426,7 @@ async function handleClick(event){
                 })
                 myTurn = false
                 showWaitMsg()
-            } catch(err) {
+            } catch (err) {
                 console.log(err)
                 cell.classList.remove(myClass)
                 removeAndAddClickListener(cell)
@@ -428,27 +435,27 @@ async function handleClick(event){
             }
         } else {
             console.log('Game Continue')
-            try{
+            try {
                 // signer = await provider.getSigner()
                 const flatSign = await signer.signMessage(cell.id)
                 const expSign = ethers.utils.splitSignature(flatSign)
-                socket.emit('move-made',{
+                socket.emit('move-made', {
                     gameId: gameId,
                     isThisPlayer1: isThisPlayer1,
                     cellId: cell.id,
                     signature: expSign
                 })
                 myTurn = false
+                resetTimer()
                 showWaitMsg()
-            } catch(err) {
+            } catch (err) {
                 console.log(err)
                 cell.classList.remove(myClass)
                 removeAndAddClickListener(cell)
                 removeWaitClass()
                 showInvalidSignMsg()
             }
-        }        
-
+        }
     } else {
         removeAndAddClickListener(cell)
     }
@@ -469,39 +476,82 @@ function isDraw() {
 }
 
 // helper functions below
-function addWaitClass(){
+function addWaitClass() {
     cellElements.forEach(ce => {
         ce.classList.add(waitingClass)
     })
 }
 
-function removeWaitClass(){
+function removeWaitClass() {
     cellElements.forEach(ce => {
         ce.classList.remove(waitingClass)
     })
 }
 
-function removeAndAddClickListener(cell){
+function removeAndAddClickListener(cell) {
     cell.removeEventListener('click', handleClick)
     cell.addEventListener('click', handleClick, { once: true })
 }
 
-function showMoveMsg(){
+function showMoveMsg() {
     waitMsg.classList.add(hiddenClass)
     invalidSignMsg.classList.add(hiddenClass)
-    claimPotButton.classList.add(hiddenClass)
+    //claimPotButton.classList.add(hiddenClass)
     moveMsg.classList.remove(hiddenClass)
 }
 
-function showWaitMsg(){
+function showWaitMsg() {
     moveMsg.classList.add(hiddenClass)
     invalidSignMsg.classList.add(hiddenClass)
-    claimPotButton.classList.remove(hiddenClass)
+    //claimPotButton.classList.remove(hiddenClass)
     waitMsg.classList.remove(hiddenClass)
 }
 
-function showInvalidSignMsg(){
+function showInvalidSignMsg() {
     waitMsg.classList.add(hiddenClass)
     moveMsg.classList.add(hiddenClass)
     invalidSignMsg.classList.remove(hiddenClass)
+}
+
+function startCountDown() {
+    countDownTime.classList.remove(hiddenClass)
+    claimPotButton.classList.add(hiddenClass)
+    timer = returnTimer()
+}
+
+function endCountDown(){
+    countDownTime.classList.add(hiddenClass)
+    claimPotButton.classList.add(hiddenClass)
+    clearInterval(timer)
+}
+
+function resetTimer(){
+    endCountDown()
+    startCountDown()
+}
+
+function returnTimer(){
+    const countDown = Date.now() + timeout;
+    return setInterval(function () {
+        // Find the distance between now and the count down date
+        let distance = countDown - Date.now();
+
+        // Time calculations for days, hours, minutes and seconds
+        let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        let seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+        // Output the result in an element with id="demo"
+        countDownTime.innerHTML = minutes + "m " + seconds + "s";
+
+        // If the count down is over, write some text 
+        if (distance < 0) {
+            clearInterval(timer);
+            if(!myTurn){
+                countDownTime.classList.add(hiddenClass)
+                claimPotButton.classList.remove(hiddenClass)
+            } else{
+                countDownTime.innerHTML = "Time Up!";
+            }
+        }
+    }, 1000);
 }
