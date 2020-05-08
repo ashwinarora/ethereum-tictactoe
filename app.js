@@ -18,8 +18,8 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
 var app = express();
-const server = app.listen(port, () => {
-    console.log("Listening on port: " + PORT);
+const server = app.listen(PORT, () => {
+    console.log("Listening on PORT: " + PORT);
 });
 const io = require('socket.io')(server);
 
