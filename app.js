@@ -3,13 +3,25 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+let PORT
 
-const io = require('socket.io')(5000);
+if (process.env.PORT > 0){
+    PORT = process.env.PORT
+}
+else{
+    PORT = 5000
+}
+
+// const io = require('socket.io')(5000);
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
 var app = express();
+const server = app.listen(port, () => {
+    console.log("Listening on port: " + port);
+});
+const io = require('socket.io')(server);
 
 const ethers = require('ethers');
 

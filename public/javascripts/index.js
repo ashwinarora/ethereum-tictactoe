@@ -1,4 +1,5 @@
-const socket = io.connect('http://localhost:5000');
+// const socket = io.connect('http://localhost:5000');
+const socket = socketIOClient('eth-tictactoe.herokuapp.com:80');
 let provider
 const hiddenClass = 'hidden'
 
