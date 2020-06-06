@@ -36,10 +36,69 @@ function connectToMetamask() {
 }
 
 function setListernes() {
-    socket.on('contract-data', (contractData) => {
+    socket.on('create-new-game', (contractData) => {
+        const submitButton = document.getElementById('submit-button')
+        const inputBet = document.getElementById('input-bet')
+        const inputGameId = document.getElementById('input-gameId')
+        const gameIdDisplay = document.getElementById('game-id-display')
+        const invalidGameIdMsg = document.getElementById('invalid-gameId-msg')
+        const loaderAnimation = document.getElementById('loader-animation')
+        const metamaskRejectionMsg = document.getElementById('metamask-rejection-msg')
+
         abi = contractData.abi
         bytecode = contractData.bytecode
         contractAddress = contractData.address
+        
+        signer = await provider.getSigner()
+        signerAddress = await signer.getAddress()
+        console.log(signerAddress)
+        console.log(contractAddress)
+        contract = new ethers.Contract(contractAddress, abi, provider)
+        contractWithSigner = contract.connect(signer)
+        if (!inputBet.value && inputGameId.value) {
+            // join game case
+            gameId = inputGameId.value
+            try{
+                socket.emit('player2-setup', {
+                    gameId: gameId,
+                    socketIdPlayer2: socket.id
+                })
+            } catch (err){
+                console.log(err)
+            }
+        } else if (inputBet.value && !inputGameId.value) {
+            // new game case
+            try {
+                const overrides = {
+                    value: ethers.utils.parseEther(inputBet.value)
+                }
+                const tx = await contractWithSigner.newGame(overrides)
+                const minnedTx = await tx.wait()
+                gameId = parseInt(ethers.utils.hexlify(minnedTx.events[0].args.gameId))
+                escrow = inputBet.value
+                isThisPlayer1 = true
+                console.log(`Transaction Successful, Game ID= ${gameId}`)
+                // consider removing socket id incase it does not turn out to be useful
+                socket.emit('new-game-created', {
+                    gameId: gameId,
+                    addressPlayer1: signerAddress,
+                    escrow: escrow,
+                    socketIdPlayer1: socket.id
+                })
+                loaderAnimation.classList.add(hiddenClass)
+                metamaskRejectionMsg.classList.add(hiddenClass)
+                invalidGameIdMsg.classList.add(hiddenClass)
+                gameIdDisplay.classList.remove(hiddenClass)
+                document.getElementById('game-id-alert').innerHTML = `<strong>Success!</strong> Game ID= ${parseInt(ethers.utils.hexlify(minnedTx.events[0].args.gameId))}`
+            } catch (err) {
+                console.log(err)
+                loaderAnimation.classList.add(hiddenClass)
+                gameIdDisplay.classList.add(hiddenClass)
+                invalidGameIdMsg.classList.add(hiddenClass)
+                submitButton.disabled = false
+                metamaskRejectionMsg.classList.remove(hiddenClass)
+            }
+        }
     })
 
     socket.on('join-game-data', async (gameData) => {
@@ -149,52 +208,6 @@ function gameSetup() {
 
         try {
             socket.emit('request-contract-data')
-            signer = await provider.getSigner()
-            signerAddress = await signer.getAddress()
-            console.log(signerAddress)
-            console.log(contractAddress)
-            contract = new ethers.Contract(contractAddress, abi, provider)
-            contractWithSigner = contract.connect(signer)
-            if (!inputBet.value && inputGameId.value) {
-                // join game case
-                gameId = inputGameId.value
-                socket.emit('player2-setup', {
-                    gameId: gameId,
-                    socketIdPlayer2: socket.id
-                })
-            } else if (inputBet.value && !inputGameId.value) {
-                // new game case
-                try {
-                    const overrides = {
-                        value: ethers.utils.parseEther(inputBet.value)
-                    }
-                    const tx = await contractWithSigner.newGame(overrides)
-                    const minnedTx = await tx.wait()
-                    gameId = parseInt(ethers.utils.hexlify(minnedTx.events[0].args.gameId))
-                    escrow = inputBet.value
-                    isThisPlayer1 = true
-                    console.log(`Transaction Successful, Game ID= ${gameId}`)
-                    // consider removing socket id incase it does not turn out to be useful
-                    socket.emit('new-game-created', {
-                        gameId: gameId,
-                        addressPlayer1: signerAddress,
-                        escrow: escrow,
-                        socketIdPlayer1: socket.id
-                    })
-                    loaderAnimation.classList.add(hiddenClass)
-                    metamaskRejectionMsg.classList.add(hiddenClass)
-                    invalidGameIdMsg.classList.add(hiddenClass)
-                    gameIdDisplay.classList.remove(hiddenClass)
-                    document.getElementById('game-id-alert').innerHTML = `<strong>Success!</strong> Game ID= ${parseInt(ethers.utils.hexlify(minnedTx.events[0].args.gameId))}`
-                } catch (err) {
-                    console.log(err)
-                    loaderAnimation.classList.add(hiddenClass)
-                    gameIdDisplay.classList.add(hiddenClass)
-                    invalidGameIdMsg.classList.add(hiddenClass)
-                    submitButton.disabled = false
-                    metamaskRejectionMsg.classList.remove(hiddenClass)
-                }
-            }
         } catch (err) {
             console.log(err)
             submitButton.disabled = false
