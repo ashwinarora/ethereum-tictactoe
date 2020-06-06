@@ -36,7 +36,7 @@ function connectToMetamask() {
 }
 
 function setListernes() {
-    socket.on('create-new-game', (contractData) => {
+    socket.on('create-new-game', async (contractData) => {
         const submitButton = document.getElementById('submit-button')
         const inputBet = document.getElementById('input-bet')
         const inputGameId = document.getElementById('input-gameId')
