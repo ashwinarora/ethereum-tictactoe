@@ -68,7 +68,7 @@ function setListernes() {
             }
         } else if (inputBet.value && !inputGameId.value) {
             // new game case
-            try {
+            try{
                 const overrides = {
                     value: ethers.utils.parseEther(inputBet.value)
                 }
@@ -78,6 +78,16 @@ function setListernes() {
                 escrow = inputBet.value
                 isThisPlayer1 = true
                 console.log(`Transaction Successful, Game ID= ${gameId}`)
+            } catch (err) {
+                console.log('$$$$$')
+                console.log(err)
+                loaderAnimation.classList.add(hiddenClass)
+                gameIdDisplay.classList.add(hiddenClass)
+                invalidGameIdMsg.classList.add(hiddenClass)
+                submitButton.disabled = false
+                metamaskRejectionMsg.classList.remove(hiddenClass)
+            }
+            try {
                 // consider removing socket id incase it does not turn out to be useful
                 socket.emit('new-game-created', {
                     gameId: gameId,
