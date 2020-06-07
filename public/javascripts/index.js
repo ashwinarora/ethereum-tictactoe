@@ -36,6 +36,12 @@ function connectToMetamask() {
 }
 
 function setListernes() {
+    socket.on('contract-deployed-successfully', () => {
+        submitButton.disabled = false
+        document.getElementById('submit-spinner').classList.add(hiddenClass)
+        document.getElementById('contract-minning-msg').classList.add(hiddenClass)
+    })
+
     socket.on('create-new-game', async (contractData) => {
         const submitButton = document.getElementById('submit-button')
         const inputBet = document.getElementById('input-bet')
@@ -81,6 +87,12 @@ function setListernes() {
             } catch (err) {
                 console.log('$$$$$')
                 console.log(err)
+
+                submitButton.disabled = true
+                document.getElementById('submit-spinner').classList.remove(hiddenClass)
+                document.getElementById('contract-minning-msg').classList.remove(hiddenClass)
+                
+
                 loaderAnimation.classList.add(hiddenClass)
                 gameIdDisplay.classList.add(hiddenClass)
                 invalidGameIdMsg.classList.add(hiddenClass)

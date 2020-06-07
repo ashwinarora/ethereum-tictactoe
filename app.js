@@ -97,7 +97,7 @@ async function deployContract() {
         await contract.deployed()
         console.log(`Contract Deployed Successfully- ${contractAddress}`)
         contract = new ethers.Contract(contractAddress, contractData.abi, provider)
-
+        socket.emit('contract-deployed-successfully')
         // console.log('Contract Deployment Code Commented Out')
     } catch (err) {
         console.log(err)

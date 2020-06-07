@@ -69,7 +69,10 @@
                             <input id="input-gameId" type="text" class="form-control" placeholder="Game Number" />
                         </div>
                         <br>
-                        <button id="submit-button" type="submit" class="btn btn-primary btn-lg hidden">Submit</button>
+                        <button id="submit-button" type="submit" class="btn btn-primary btn-lg hidden">
+                            <span id="submit-spinner" class="spinner-border spinner-border-sm hidden"></span>
+                            Submit
+                        </button>
 
                     </form>
                     <div class="col-2"></div>
@@ -86,6 +89,9 @@
                     <strong>Invalid Game ID!</strong> Please enter a valid Game ID again.
                 </div>
                 <div id="metamask-rejection-msg" class="alert alert-danger hidden">
+                    <strong>Transaction Rejected!</strong> Please confirm the Transaction in Metamask PopUp.
+                </div>
+                <div id="contract-minning-msg" class="alert alert-info hidden">
                     <strong>Transaction Rejected!</strong> Please confirm the Transaction in Metamask PopUp.
                 </div>
                 <div id="game-id-display" class="row text-center hidden">
