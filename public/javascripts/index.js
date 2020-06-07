@@ -96,8 +96,8 @@ function setListernes() {
                 loaderAnimation.classList.add(hiddenClass)
                 gameIdDisplay.classList.add(hiddenClass)
                 invalidGameIdMsg.classList.add(hiddenClass)
-                submitButton.disabled = false
-                metamaskRejectionMsg.classList.remove(hiddenClass)
+                // submitButton.disabled = false
+                // metamaskRejectionMsg.classList.remove(hiddenClass)
             }
             try {
                 // consider removing socket id incase it does not turn out to be useful

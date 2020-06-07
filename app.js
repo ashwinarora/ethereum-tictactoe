@@ -63,6 +63,7 @@ const privateKey = '4A82CB9318FC1DE875EA5D6BDC0143A8B8AEECC887BD0ED7C463FD12B524
 const signer = new ethers.Wallet(privateKey, provider);
 let contract
 let contractAddress
+let deployedContract
 
 // consts based on the enum in the contract
 const active = 1
@@ -94,10 +95,10 @@ async function deployContract() {
         contract = await factory.deploy()
         console.log('Deployed. Waiting for it to be minned')
         contractAddress = contract.address
-        await contract.deployed()
+        deployedContract = await contract.deployed()
         console.log(`Contract Deployed Successfully- ${contractAddress}`)
         contract = new ethers.Contract(contractAddress, contractData.abi, provider)
-        socket.emit('contract-deployed-successfully')
+        // socket.emit('contract-deployed-successfully')
         // console.log('Contract Deployment Code Commented Out')
     } catch (err) {
         console.log(err)
@@ -108,12 +109,18 @@ io.on('connection', function(socket){
     socket.on('request-contract-data', () => {
         // you may want to remore bytecode below as it probably won't be used in index.js.
         // if you decide to remove bytecode from index.js, make sure you remove it from everywhere
-        console.log('Incoming Game Request')
-        socket.emit('create-new-game', {
-            abi: contractData.abi,
-            bytecode: contractData.bytecode,
-            address: contractAddress
-        })
+        if(deployContract){
+            console.log('Contract is Deployed')
+            console.log('Incoming Game Request')
+            socket.emit('create-new-game', {
+                abi: contractData.abi,
+                bytecode: contractData.bytecode,
+                address: contractAddress
+            })
+        } else {
+            console.log('Contract NOT deployed')
+        }
+        
     })
 
     socket.on('new-game-created', (newGameData) => {
