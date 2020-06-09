@@ -1,5 +1,6 @@
 const socket = io.connect('https://eth-tictactoe.herokuapp.com')
 // const socket = socketIOClient('eth-tictactoe.herokuapp.com:80')
+// const socket = io.connect('http://localhost:5000');
 let provider
 const hiddenClass = 'hidden'
 
@@ -36,12 +37,6 @@ function connectToMetamask() {
 }
 
 function setListernes() {
-    socket.on('contract-deployed-successfully', () => {
-        submitButton.disabled = false
-        document.getElementById('submit-spinner').classList.add(hiddenClass)
-        document.getElementById('contract-minning-msg').classList.add(hiddenClass)
-    })
-
     socket.on('create-new-game', async (contractData) => {
         const submitButton = document.getElementById('submit-button')
         const inputBet = document.getElementById('input-bet')
@@ -84,22 +79,7 @@ function setListernes() {
                 escrow = inputBet.value
                 isThisPlayer1 = true
                 console.log(`Transaction Successful, Game ID= ${gameId}`)
-            } catch (err) {
-                console.log('$$$$$')
-                console.log(err)
 
-                submitButton.disabled = true
-                document.getElementById('submit-spinner').classList.remove(hiddenClass)
-                document.getElementById('contract-minning-msg').classList.remove(hiddenClass)
-                
-
-                loaderAnimation.classList.add(hiddenClass)
-                gameIdDisplay.classList.add(hiddenClass)
-                invalidGameIdMsg.classList.add(hiddenClass)
-                // submitButton.disabled = false
-                // metamaskRejectionMsg.classList.remove(hiddenClass)
-            }
-            try {
                 // consider removing socket id incase it does not turn out to be useful
                 socket.emit('new-game-created', {
                     gameId: gameId,
@@ -119,11 +99,17 @@ function setListernes() {
                 invalidGameIdMsg.classList.add(hiddenClass)
                 submitButton.disabled = false
                 metamaskRejectionMsg.classList.remove(hiddenClass)
-            }
+            } 
         }
     })
 
     socket.on('join-game-data', async (gameData) => {
+        const submitButton = document.getElementById('submit-button')
+        const gameIdDisplay = document.getElementById('game-id-display')
+        const invalidGameIdMsg = document.getElementById('invalid-gameId-msg')
+        const loaderAnimation = document.getElementById('loader-animation')
+        const sameJoinErr = document.getElementById('same-join-err')
+
         escrow = gameData.escrow
         const overrides = {
             value: ethers.utils.parseEther(escrow)
@@ -141,7 +127,17 @@ function setListernes() {
                 socketIdPlayer2: socket.Id
             })
         } catch (err) {
-            console.log(err)
+            // error code of when transaction failes because joining account is same as create account
+            if( err.code === -32000 ){
+                console.log('same join error')
+                loaderAnimation.classList.add(hiddenClass)
+                gameIdDisplay.classList.add(hiddenClass)
+                invalidGameIdMsg.classList.add(hiddenClass)
+                submitButton.disabled = false
+                sameJoinErr.classList.remove(hiddenClass)
+            } else {
+                console.log( err )
+            }
         }
 
     })
@@ -182,6 +178,7 @@ function gameSetup() {
     const invalidGameIdMsg = document.getElementById('invalid-gameId-msg')
     const loaderAnimation = document.getElementById('loader-animation')
     const metamaskRejectionMsg = document.getElementById('metamask-rejection-msg')
+    const sameJoinErr = document.getElementById('same-join-err')
 
     newGameButton.addEventListener('click', () => {
         if (newGameSetup.className == 'new-game-setup') {
@@ -193,6 +190,7 @@ function gameSetup() {
             invalidGameIdMsg.classList.add(hiddenClass)
             loaderAnimation.classList.add(hiddenClass)
             metamaskRejectionMsg.classList.add(hiddenClass)
+            sameJoinErr.classList.add(hiddenClass)
         } else {
             // Showing new game setup
             newGameSetup.className = 'new-game-setup'
@@ -211,6 +209,7 @@ function gameSetup() {
             invalidGameIdMsg.classList.add(hiddenClass)
             loaderAnimation.classList.add(hiddenClass)
             metamaskRejectionMsg.classList.add(hiddenClass)
+            sameJoinErr.classList.add(hiddenClass)
         } else {
             // Showing join game setup
             joinGameSetup.className = 'join-game-setup'
@@ -222,12 +221,13 @@ function gameSetup() {
     submitButton.addEventListener('click', async () => {
         invalidGameIdMsg.classList.add(hiddenClass)
         metamaskRejectionMsg.classList.add(hiddenClass)
+        sameJoinErr.classList.add(hiddenClass)
         gameIdDisplay.classList.add(hiddenClass)
         loaderAnimation.classList.remove(hiddenClass)
         newGameButton.disabled = true
         joinGameButton.disabled = true
         submitButton.disabled = true
-
+        
         try {
             socket.emit('request-contract-data')
         } catch (err) {

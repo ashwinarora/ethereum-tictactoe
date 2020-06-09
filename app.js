@@ -59,11 +59,11 @@ app.use(function (err, req, res, next) {
 //-----------code after this-------------
 
 const provider = ethers.getDefaultProvider('ropsten');
-const privateKey = '4A82CB9318FC1DE875EA5D6BDC0143A8B8AEECC887BD0ED7C463FD12B524071C' // account 4
+const privateKey = '89DE4B3D0AFA54F00A08626809CF7B35C421E2ACA1C0FDEEC31FAB901BC7ABDB' // account 4
+// const privateKey = '4A82CB9318FC1DE875EA5D6BDC0143A8B8AEECC887BD0ED7C463FD12B524071C' // account 4
 const signer = new ethers.Wallet(privateKey, provider);
-let contract
-let contractAddress
-let deployedContract
+const contractAddress= '0x395053eC09b1C5597dA10CD26dD55573E3b1A1BA'
+const contract = new ethers.Contract(contractAddress, contractData.abi, provider)
 
 // consts based on the enum in the contract
 const active = 1
@@ -83,23 +83,37 @@ let game = {
     result: '',
 }
 let games = []
-let numberOfGames = 0
+let gameNumber
 const timeout = 60000 // 1 minutes
 
 deployContract()
 
 async function deployContract() {
-    const factory = new ethers.ContractFactory(contractData.abi, contractData.bytecode, signer)
+    // following code depployes the contract and and set values for contract address, contract
+    // const factory = new ethers.ContractFactory(contractData.abi, contractData.bytecode, signer)
+    // try{
+    //     // const overrides = {
+    //     //     gasLimit: 496547,
+    //     //     gasPrice: ethers.utils.parseUnits('47.0', 'gwei'),
+    //     // }
+    //     console.log('Deploying Contract')
+    //     contract = await factory.deploy()
+    //     console.log('Deployed. Waiting for it to be minned')
+    //     contractAddress = contract.address
+    //     await contract.deployed()
+    //     io.emit('contract-deployed-successfully')
+    //     console.log(`Contract Deployed Successfully- ${contractAddress}`)
+    //     contract = new ethers.Contract(contractAddress, contractData.abi, provider)
+        
+    //     // console.log('Contract Deployment Code Commented Out')
+    // } catch (err) {
+    //     console.log(err)
+    // }
+
+    //New Approach- have one contract to rule them all
     try{
-        console.log('Deploying Contract')
-        contract = await factory.deploy()
-        console.log('Deployed. Waiting for it to be minned')
-        contractAddress = contract.address
-        deployedContract = await contract.deployed()
-        console.log(`Contract Deployed Successfully- ${contractAddress}`)
-        contract = new ethers.Contract(contractAddress, contractData.abi, provider)
-        // socket.emit('contract-deployed-successfully')
-        // console.log('Contract Deployment Code Commented Out')
+        gameNumber = parseInt(await contract.getNumberOfGames())
+        console.log({gameNumber})
     } catch (err) {
         console.log(err)
     }
@@ -109,22 +123,15 @@ io.on('connection', function(socket){
     socket.on('request-contract-data', () => {
         // you may want to remore bytecode below as it probably won't be used in index.js.
         // if you decide to remove bytecode from index.js, make sure you remove it from everywhere
-        if(deployContract){
-            console.log('Contract is Deployed')
-            console.log('Incoming Game Request')
-            socket.emit('create-new-game', {
-                abi: contractData.abi,
-                bytecode: contractData.bytecode,
-                address: contractAddress
-            })
-        } else {
-            console.log('Contract NOT deployed')
-        }
-        
+        console.log('Incoming Game Request')
+        socket.emit('create-new-game', {
+            abi: contractData.abi,
+            bytecode: contractData.bytecode,
+            address: contractAddress
+        }) 
     })
 
     socket.on('new-game-created', (newGameData) => {
-        numberOfGames++
         games.push({
             id: newGameData.gameId,
             addressPlayer1: newGameData.addressPlayer1,
@@ -138,7 +145,7 @@ io.on('connection', function(socket){
     })
 
     socket.on('player2-setup', (joinGameData) => {
-        const gameIndex = joinGameData.gameId - 1 // index of the games array
+        const gameIndex = joinGameData.gameId - gameNumber - 1 // index of the games array
         console.log(`Game Join Request, Index=${gameIndex}`)
         // checking if player2 has already joined
         try {
@@ -161,7 +168,7 @@ io.on('connection', function(socket){
     })
 
     socket.on('game-joined', (dataPlayer2) => {
-        const gameIndex = dataPlayer2.gameId - 1 // index of the games array
+        const gameIndex = dataPlayer2.gameId - gameNumber - 1 // index of the games array
         if (!games[gameIndex].addressPlayer2) {
             console.log(`player2= ${dataPlayer2.addressPlayer2}`)
             games[gameIndex].addressPlayer2 = dataPlayer2.addressPlayer2
@@ -180,7 +187,7 @@ io.on('connection', function(socket){
     })
 
     socket.on('move-made', (move) => {
-        const gameIndex = move.gameId - 1
+        const gameIndex = move.gameId - gameNumber - 1
         if (games[gameIndex].result === 'active') {
             io.to(`gameId${games[gameIndex].id}`).emit('opponent-move', move)
         } else {
@@ -189,18 +196,18 @@ io.on('connection', function(socket){
     })
 
     socket.on('move-verified', (data) => {
-        const gameIndex = data.gameId - 1
+        const gameIndex = data.gameId - gameNumber - 1
         games[gameIndex].timestamp = Date.now()
         console.log(`Old TimeStamp= ${new Date().toTimeString()}`)
     })
 
     socket.on('singature-invalid', (data) => {
-        const gameIndex = data.gameId - 1
+        const gameIndex = data.gameId - gameNumber - 1
         io.to(`gameId${games[gameIndex].id}`).emit('rectify-signature', data)
     })
 
     socket.on('claim-victory', (move) => {
-        const gameIndex = move.gameId - 1
+        const gameIndex = move.gameId - gameNumber - 1
         if (games[gameIndex].result === 'active') {
             io.to(`gameId${games[gameIndex].id}`).emit('verify-victory', move)
         } else {
@@ -209,7 +216,7 @@ io.on('connection', function(socket){
     })
 
     socket.on('accept-defeat', async (data) => {
-        const gameIndex = data.gameId - 1
+        const gameIndex = data.gameId - gameNumber - 1
         io.to(`gameId${games[gameIndex].id}`).emit('game-over-victory', data)
         const contractWithSigner = contract.connect(signer)
         try {
@@ -234,7 +241,7 @@ io.on('connection', function(socket){
     })
 
     socket.on('declare-draw', async (move) => {
-        const gameIndex = move.gameId - 1
+        const gameIndex = move.gameId - gameNumber - 1
         if (games[gameIndex].result === 'active') {
             io.to(`gameId${games[gameIndex].id}`).emit('verify-draw', move)
         } else {
@@ -243,7 +250,7 @@ io.on('connection', function(socket){
     })
 
     socket.on('confirm-draw', async (data) => {
-        const gameIndex = data.gameId - 1
+        const gameIndex = data.gameId - gameNumber - 1
         try {
             io.to(`gameId${games[gameIndex].id}`).emit('game-over-draw', data)
             const contractWithSigner = contract.connect(signer)
@@ -258,7 +265,7 @@ io.on('connection', function(socket){
     })
 
     socket.on('claim-pot', async (data) => {
-        const gameIndex = data.gameId - 1
+        const gameIndex = data.gameId - gameNumber - 1
         if (Date.now() - games[gameIndex].timestamp > timeout) {
             console.log('Player Absconded')
             io.to(`gameId${games[gameIndex].id}`).emit('game-over-absconded', data)
