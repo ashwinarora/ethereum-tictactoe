@@ -149,9 +149,9 @@ io.on('connection', function(socket){
         console.log(`Game Join Request, Index=${gameIndex}`)
         // checking if player2 has already joined
         try {
-            console.log(`addressPlayer2= ${games[gameIndex].addressPlayer2}`)
-            console.log(games[gameIndex])
-            console.log(games)
+            // console.log(`addressPlayer2= ${games[gameIndex].addressPlayer2}`)
+            // console.log(games[gameIndex])
+            // console.log(games)
             if (!games[gameIndex].addressPlayer2) {
                 socket.emit('join-game-data', {
                     escrow: games[gameIndex].escrow

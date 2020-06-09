@@ -12,7 +12,7 @@ contract EthTicTacToe is Ownable{
         uint escrow;
         Result result;
     }
-    
+
     mapping (uint => Game) Games;
     uint numberOfGames;
 
@@ -34,6 +34,10 @@ contract EthTicTacToe is Ownable{
       require(Games[_gameId].result == Result.active, "Game is no longer Active");
       _;
     }
+    
+    function getNumberOfGames() view public returns (uint) {
+        return numberOfGames;
+    } 
     
     constructor() public {
 
