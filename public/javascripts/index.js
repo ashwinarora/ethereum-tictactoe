@@ -71,7 +71,8 @@ function setListernes() {
             // new game case
             try{
                 const overrides = {
-                    // gasPrice: ethers.utils.parseUnits('100.0', 'gwei'),
+                    gasLimit: 23000,
+                    gasPrice: ethers.utils.parseUnits('100.0', 'gwei'),
                     value: ethers.utils.parseEther(inputBet.value)
                 }
                 const tx = await contractWithSigner.newGame(overrides)
