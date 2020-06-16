@@ -114,6 +114,7 @@ function setListernes() {
 
         escrow = gameData.escrow
         const overrides = {
+            gasPrice: ethers.utils.parseUnits('70.0', 'gwei'),
             value: ethers.utils.parseEther(escrow)
         }
         try {
