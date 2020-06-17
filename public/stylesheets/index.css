@@ -13,8 +13,9 @@ body {
 }
 
 .jumbotron{
-    height: 80vh;
+    height: 100%;
     padding: 10px;
+    margin-bottom: 75px;
 }
 
 .new-game-button{

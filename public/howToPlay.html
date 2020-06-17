@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="stylesheets/index.css">
+    <title>How to Play?</title>
+</head>
+<body>
+    <div class="container">
+        <nav class="navbar navbar-expand-sm bg-dark navbar-dark fixed-top">
+            <a class="navbar-brand" href="https://eth-tictactoe.herokuapp.com/">Ethereum TicTacToe</a>
+            <ul class="navbar-nav">
+                <li class="nav-item">
+                    <a class="nav-link" href="#">How to Play?</a>
+                </li>
+                <li class="nav-item hidden">
+                    <a class="nav-link" href="#">About</a>
+                </li>
+                <li class="nav-item hidden">
+                    <a class="nav-link" href="#">Contact</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="https://eth-tictactoe.herokuapp.com/hireTheDev.html">Hire the Developer!</a>
+                </li>
+            </ul>
+        </nav>
+        
+        <div id="howToPlay" class="container-fluid game-over">
+            <div class="jumbotron text-center">
+                <div class="col-12">
+                    <h1 class="display-6">How to Play?</h1>
+                </div>
+                <div class="row">
+                    <div class="col-1"></div>
+                    <div class="col-10">
+                        <iframe width="560" height="315" src="https://www.youtube.com/embed/vYFKnyjnS14" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                    <div class="col-1"></div>
+                </div>
+                <div class="row">
+                    <div class="col-1"></div>
+                    <div class="col-10">
+                        <div class="row" style="padding-bottom: 50px; padding-top: 20px;">
+                            <div class="col-3">
+                                <div class="list-group" id="list-tab" role="tablist">
+                                    <a class="list-group-item list-group-item-action active" id="list-requirments-list" data-toggle="list" href="#list-requirments" role="tab">Requirments</a>
+                                    <a class="list-group-item list-group-item-action" id="list-self-list" data-toggle="list" href="#list-self" role="tab">Play Against Yourself</a>
+                                    <a class="list-group-item list-group-item-action" id="list-gamesetupnew-list" data-toggle="list" href="#list-gamesetupnew" role="tab">Game Setup(New)</a>
+                                    <a class="list-group-item list-group-item-action" id="list-gamesetupjoin-list" data-toggle="list" href="#list-gamesetupjoin" role="tab">Game Setup(Join)</a>
+                                    <a class="list-group-item list-group-item-action" id="list-gameplay-list" data-toggle="list" href="#list-gameplay" role="tab">Game Play</a>
+                                    <a class="list-group-item list-group-item-action" id="list-gameend-list" data-toggle="list" href="#list-gameend" role="tab">Game End</a>
+                                </div>
+                            </div>
+                            <div class="col-9 text-left">
+                                <div class="tab-content" id="nav-tabContent">
+                                    <div class="tab-pane fade show active" id="list-requirments" role="tabpanel" aria-labelledby="list-requirments-list">
+                                        <ul>
+                                            <li>Google Chrome Browser</li>
+                                            <li>Metamask Extention, install it <a href="https://metamask.io/" target="_blank">here</a></li>
+                                            <li>Set your network in metamask to Ropsten</li>
+                                            <li>If you don't have any ether in your account, get some for free <a href="https://faucet.ropsten.be/" target="_blank">here</a> or <a href="https://faucet.metamask.io/" target="_blank">here</a></li>
+                                        </ul>
+                                    </div>
+                                    <div class="tab-pane fade" id="list-self" role="tabpanel" aria-labelledby="list-self-list">
+                                        <ol>
+                                            <li>Since this is only a protfolio project, chances are that you are here to checkout the developer talent and not actually bet your ETH.</li>
+                                            <li>Simply open this in another tab, you can click <a href="https://eth-tictactoe.herokuapp.com/" target="_blank">here.</a></li>
+                                            <li>Play as player 1 in one tab by creating a new game.</li>
+                                            <li>Play as player 2 in the other tab by joining the game.</li>
+                                        </ol>
+                                    </div>
+                                    <div class="tab-pane fade" id="list-gamesetupnew" role="tabpanel" aria-labelledby="list-gamesetupnew-list">
+                                        <ol>
+                                            <li>Click on button 'Connect To Metamask'</li>
+                                            <li>In the metamask popup, click 'Connect'</li>
+                                            <li>Click 'New Game'. Enter the amount you want to bet in ETH. Click 'Submit'</li>
+                                            <li>Wait till you transaction is minned. This can take around 30 seconds.</li>
+                                            <li>Game ID will appear on the screen after minning is done. Share this Game ID with your opponent</li>
+                                            <li>Game will Start automatically after your opponent join's</li>
+                                        </ol>
+                                    </div>
+                                    <div class="tab-pane fade" id="list-gamesetupjoin" role="tabpanel" aria-labelledby="list-gamesetupjoin-list">
+                                        <ol>
+                                            <li>Click on button 'Connect To Metamask'</li>
+                                            <li>In the metamask popup, click 'Connect'</li>
+                                            <li>Click 'Join Game'. Enter the Game ID shared by your opponent. Click 'Submit'</li>
+                                            <li>Wait till you transaction is minned. This can take around 30 seconds.</li>
+                                            <li>Game will Start automatically after the transaction is minned.</li>
+                                        </ol>
+                                    </div>
+                                    <div class="tab-pane fade" id="list-gameplay" role="tabpanel" aria-labelledby="list-gameplay-list">
+                                        <ol>
+                                            <li>The message below the board will tell you if it is your turn or not.</li>
+                                            <li>To make you move, click any box inside the board.</li>
+                                            <li>In the metamask popup, click 'Sign'</li>
+                                            <li>Game will end automatically if there is a winner or draw.</li>
+                                        </ol>
+                                    </div>
+                                    <div class="tab-pane fade" id="list-gameend" role="tabpanel" aria-labelledby="list-gameend-list">
+                                        <ul>
+                                            <li>If the game ended in draw, then you will be refunded the amount you bet.</li>
+                                            <li>If you won, you will be credited the twice the amount you bet</li>
+                                            <li>Nothing will be credited if you lost.</li>
+                                            <li>Please note, only in the case anyone wins, 10% of the total bet will be charged as commission.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-1"></div>
+                </div>
+            </div>
+        </div>
+
+        <nav class="navbar navbar-expand-sm bg-dark navbar-dark fixed-bottom">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item hidden">
+                    <a class="nav-link" href="#">Developer Portfolio</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="https://github.com/ashwinarora" target="_blank">GitHub</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="https://linkedin.com/in/ashwin-arora" target="_blank">LinkedIn</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+</body>
+</html>
