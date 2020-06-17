@@ -44,6 +44,7 @@ function setListernes() {
         const gameIdDisplay = document.getElementById('game-id-display')
         const invalidGameIdMsg = document.getElementById('invalid-gameId-msg')
         const loaderAnimation = document.getElementById('loader-animation')
+        const sameJoinErr = document.getElementById('same-join-err')
         const metamaskRejectionMsg = document.getElementById('metamask-rejection-msg')
 
         abi = contractData.abi
@@ -92,6 +93,7 @@ function setListernes() {
                 loaderAnimation.classList.add(hiddenClass)
                 metamaskRejectionMsg.classList.add(hiddenClass)
                 invalidGameIdMsg.classList.add(hiddenClass)
+                sameJoinErr.classList.add(hiddenClass)
                 gameIdDisplay.classList.remove(hiddenClass)
                 document.getElementById('game-id-alert').innerHTML = `<strong>Success!</strong> Game ID= ${parseInt(ethers.utils.hexlify(minnedTx.events[0].args.gameId))}`
             } catch (err) {
@@ -99,6 +101,7 @@ function setListernes() {
                 loaderAnimation.classList.add(hiddenClass)
                 gameIdDisplay.classList.add(hiddenClass)
                 invalidGameIdMsg.classList.add(hiddenClass)
+                sameJoinErr.classList.add(hiddenClass)
                 submitButton.disabled = false
                 metamaskRejectionMsg.classList.remove(hiddenClass)
             } 
@@ -111,6 +114,7 @@ function setListernes() {
         const invalidGameIdMsg = document.getElementById('invalid-gameId-msg')
         const loaderAnimation = document.getElementById('loader-animation')
         const sameJoinErr = document.getElementById('same-join-err')
+        const metamaskRejectionMsg = document.getElementById('metamask-rejection-msg')
 
         escrow = gameData.escrow
         const overrides = {
@@ -136,10 +140,19 @@ function setListernes() {
                 loaderAnimation.classList.add(hiddenClass)
                 gameIdDisplay.classList.add(hiddenClass)
                 invalidGameIdMsg.classList.add(hiddenClass)
+                metamaskRejectionMsg.classList.add(hiddenClass)
                 submitButton.disabled = false
                 sameJoinErr.classList.remove(hiddenClass)
+            } else if(err.code === 4001) {
+                console.log('user denied transaction')
+                loaderAnimation.classList.add(hiddenClass)
+                gameIdDisplay.classList.add(hiddenClass)
+                invalidGameIdMsg.classList.add(hiddenClass)
+                sameJoinErr.classList.add(hiddenClass)
+                submitButton.disabled = false
+                metamaskRejectionMsg.classList.remove(hiddenClass)
             } else {
-                console.log( err )
+                console.log(err)
             }
         }
 
