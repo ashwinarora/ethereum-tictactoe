@@ -74,7 +74,8 @@ function setListernes() {
                 const overrides = {
                     // gasLimit: 23000,
                     gasPrice: ethers.utils.parseUnits('70.0', 'gwei'),
-                    value: ethers.utils.parseEther(inputBet.value)
+                    value: ethers.utils.parseEther(inputBet.value),
+                    chainId: ethers.utils.getNetwork('ropsten').chainId
                 }
                 const tx = await contractWithSigner.newGame(overrides)
                 const minnedTx = await tx.wait()
@@ -119,7 +120,8 @@ function setListernes() {
         escrow = gameData.escrow
         const overrides = {
             gasPrice: ethers.utils.parseUnits('70.0', 'gwei'),
-            value: ethers.utils.parseEther(escrow)
+            value: ethers.utils.parseEther(escrow),
+            chainId: ethers.utils.getNetwork('ropsten').chainId
         }
         try {
             const tx = await contractWithSigner.joinGame(gameId, overrides)
