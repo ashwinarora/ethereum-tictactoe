@@ -155,6 +155,12 @@ function setListernes() {
                 metamaskRejectionMsg.classList.remove(hiddenClass)
             } else {
                 console.log(err)
+                loaderAnimation.classList.add(hiddenClass)
+                gameIdDisplay.classList.add(hiddenClass)
+                invalidGameIdMsg.classList.add(hiddenClass)
+                sameJoinErr.classList.add(hiddenClass)
+                submitButton.disabled = false
+                metamaskRejectionMsg.classList.remove(hiddenClass)
             }
         }
 
