@@ -21,7 +21,7 @@ let isThisPlayer1
 connectToMetamask()
 
 function connectToMetamask() {
-    console.log("Hey There, I'm glad to see your interest in my tech. To book a call with me simply write a mail to ashwinarora48@gmail.com with the subject line-'I opened console of ET3'. Cheers!" )
+    console.log("Hey There, I'm glad to see your interest in my tech. To book a call with me simply write a mail to contact@ashwinarora.com with the subject line-'I opened console of ET3'. Cheers!" )
     if (window.ethereum) {
         const metamaskButton = document.getElementById('metamask-button')
         metamaskButton.classList.remove(hiddenClass)

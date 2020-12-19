@@ -139,3 +139,77 @@ body {
     height: calc(var(--mark-size) * .7);
     background-color: #eeeeee;
 }
+
+#network {
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    margin-left: 0.5rem;
+    max-width: 20rem;
+    min-width: 19rem;
+    color: white;
+}
+
+#network-pill {
+    background-color: #262626;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    /* height: 60%; */
+    width: 60%;
+    cursor: default;
+    border-radius: 9999px;
+}
+
+#ping{
+    height: 10px;
+    width: 10px;
+    display: flex;
+}
+
+#ping-pulse {
+    animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
+    display: inline-flex;
+    border-radius: 9999px;
+    background-color: #A855F7;
+    position: absolute;
+    padding: 5px;
+}
+
+#ping-dot {
+    position: relative;
+    display: inline-flex;
+    border-radius: 9999px;
+    height: 10px;
+    width: 10px;
+    background-color: #8d21f1;
+}
+
+@keyframes ping {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    75%, 100% {
+      transform: scale(2);
+      opacity: 0;
+    }
+}
+
+.logo-div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: medium;
+    margin-left: 1rem;
+    color: white;
+    /* border: solid red 1px; */
+}
+
+.logo-image {
+    width: 15rem;
+    height: auto;
+    object-fit: scale-down;
+}
