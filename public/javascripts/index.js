@@ -138,7 +138,7 @@ function setListernes() {
             })
         } catch (err) {
             // error code of when transaction failes because joining account is same as create account
-            if( err.code === -32000 ){
+            if( err.code === -32000 || err.code === -32603){
                 console.log('same join error')
                 loaderAnimation.classList.add(hiddenClass)
                 gameIdDisplay.classList.add(hiddenClass)
