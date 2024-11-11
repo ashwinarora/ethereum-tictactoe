@@ -10,6 +10,7 @@
   "dependencies": {
     "cookie-parser": "~1.4.4",
     "debug": "~2.6.9",
+    "dotenv": "^16.4.5",
     "ethers": "^4.0.44",
     "express": "~4.16.1",
     "helmet": "^3.23.0",

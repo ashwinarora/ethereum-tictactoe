@@ -4,6 +4,10 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var helmet =  require('helmet')
+const ethers = require('ethers');
+const contractData = require('./contractData.js');
+require('dotenv').config()
+
 let PORT
 
 if (process.env.PORT > 0){
@@ -23,11 +27,8 @@ app.use(helmet());
 const server = app.listen(PORT, () => {
     console.log("Listening on PORT: " + PORT);
 });
+
 const io = require('socket.io')(server);
-
-const ethers = require('ethers');
-
-const contractData = require('./contractData.js');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -60,11 +61,15 @@ app.use(function (err, req, res, next) {
 
 //-----------code after this-------------
 
-const provider = ethers.getDefaultProvider('ropsten');
-const privateKey = '89DE4B3D0AFA54F00A08626809CF7B35C421E2ACA1C0FDEEC31FAB901BC7ABDB' // account 4
-// const privateKey = '4A82CB9318FC1DE875EA5D6BDC0143A8B8AEECC887BD0ED7C463FD12B524071C' // account 4
+// const provider = ethers.getDefaultProvider('ropsten');
+const provider = new ethers.providers.JsonRpcProvider('https://data-seed-prebsc-2-s2.bnbchain.org:8545');
+console.log(provider)
+
+
+const privateKey =  process.env.PRIVATE_KEY
+console.log({privateKey})
 const signer = new ethers.Wallet(privateKey, provider);
-const contractAddress= '0x395053eC09b1C5597dA10CD26dD55573E3b1A1BA'
+const contractAddress= '0x3c24148F25e7c8FACea24221bf13793a0C6f1DcE'
 const contract = new ethers.Contract(contractAddress, contractData.abi, provider)
 
 // consts based on the enum in the contract
@@ -116,10 +121,24 @@ async function deployContract() {
     try{
         gameNumber = parseInt(await contract.getNumberOfGames())
         console.log({gameNumber})
+        await testCall()
     } catch (err) {
         console.log(err)
     }
 }
+
+const testCall = async () => {
+    console.log("Testing Call")
+    const gameId = 9
+    const contractWithSigner = contract.connect(signer)
+    
+    // console.log(signer)
+    const tx = await contractWithSigner.endGame(gameId, player1Wins)
+    await tx.wait()
+    
+}
+
+
 
 io.on('connection', function(socket){
     socket.on('request-contract-data', () => {
