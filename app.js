@@ -63,8 +63,6 @@ app.use(function (err, req, res, next) {
 
 // const provider = ethers.getDefaultProvider('ropsten');
 const provider = new ethers.providers.JsonRpcProvider('https://data-seed-prebsc-2-s2.bnbchain.org:8545');
-console.log(provider)
-
 
 const privateKey =  process.env.PRIVATE_KEY
 console.log({privateKey})
@@ -125,7 +123,7 @@ async function deployContract() {
         console.log(err)
     }
 }
-
+console.log(io)
 io.on('connection', function(socket){
     console.log('a user connected')
     socket.on('request-contract-data', () => {
