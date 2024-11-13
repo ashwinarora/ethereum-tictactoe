@@ -145,7 +145,7 @@ body {
     align-items: center;
     justify-content: start;
     margin-left: 0.5rem;
-    max-width: 20rem;
+    max-width: 23rem;
     min-width: 19rem;
     color: white;
 }
@@ -154,13 +154,14 @@ body {
     background-color: #262626;
     display: flex;
     align-items: center;
-    justify-content: space-around;
-    padding-left: 1rem;
-    padding-right: 1rem;
+    justify-content: space-between;
+    padding-left: 8rem;
+    padding-right: 8rem;
     /* height: 60%; */
-    width: 60%;
+    width: 100%;
     cursor: default;
     border-radius: 9999px;
+    padding: 4px 4px;
 }
 
 #ping{
@@ -209,7 +210,7 @@ body {
 }
 
 .logo-image {
-    width: 15rem;
+    width: 4rem;
     height: auto;
     object-fit: scale-down;
 }

@@ -1,5 +1,8 @@
-const socket = io.connect('https://eth-tictactoe.herokuapp.com')
+// const socket = io.connect('https://eth-tictactoe.herokuapp.com')
+// const socket = io.connect('https://ethereum-tictactoe-diq84fqds-ashwins-projects-bfcbe243.vercel.app/')
+const socket = io.connect('https://ethereum-tictactoe.vercel.app/')
 // const socket = socketIOClient('eth-tictactoe.herokuapp.com:80') // never worked
+import { ethers, Signature  } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.min.js";
 // const socket = io.connect('http://localhost:5000');
 let provider
 const hiddenClass = 'hidden'
@@ -28,7 +31,7 @@ function connectToMetamask() {
         metamaskButton.addEventListener('click', async () => {
             const accounts = await ethereum.enable()
             metamaskButton.classList.add(hiddenClass)
-            provider = new ethers.providers.Web3Provider(web3.currentProvider);
+            provider = new ethers.BrowserProvider(window.ethereum);
             document.getElementById('game-setup-buttons').classList.remove(hiddenClass)
             setListernes();
         })
@@ -74,13 +77,15 @@ function setListernes() {
             try{
                 const overrides = {
                     // gasLimit: 23000,
-                    gasPrice: ethers.utils.parseUnits('70.0', 'gwei'),
-                    value: ethers.utils.parseEther(inputBet.value),
-                    chainId: ethers.utils.getNetwork('ropsten').chainId
+                    // gasPrice: ethers.parseUnits('70.0', 'gwei'),
+                    value: ethers.parseEther(inputBet.value),
+                    // chainId: ethers.getNetwork('ropsten').chainId
                 }
                 const tx = await contractWithSigner.newGame(overrides)
                 const minnedTx = await tx.wait()
-                gameId = parseInt(ethers.utils.hexlify(minnedTx.events[0].args.gameId))
+                console.log(minnedTx)
+                gameId = parseInt(minnedTx.logs[0].args.gameId)
+                console.log(gameId)
                 escrow = inputBet.value
                 isThisPlayer1 = true
                 console.log(`Transaction Successful, Game ID= ${gameId}`)
@@ -97,7 +102,7 @@ function setListernes() {
                 invalidGameIdMsg.classList.add(hiddenClass)
                 sameJoinErr.classList.add(hiddenClass)
                 gameIdDisplay.classList.remove(hiddenClass)
-                document.getElementById('game-id-alert').innerHTML = `<strong>Success!</strong> Game ID= ${parseInt(ethers.utils.hexlify(minnedTx.events[0].args.gameId))}`
+                document.getElementById('game-id-alert').innerHTML = `<strong>Success!</strong> Game ID= ${gameId}`
             } catch (err) {
                 console.log(err)
                 loaderAnimation.classList.add(hiddenClass)
@@ -120,11 +125,12 @@ function setListernes() {
 
         escrow = gameData.escrow
         const overrides = {
-            gasPrice: ethers.utils.parseUnits('70.0', 'gwei'),
-            value: ethers.utils.parseEther(escrow),
-            chainId: ethers.utils.getNetwork('ropsten').chainId
+            // gasPrice: ethers.utils.parseUnits('70.0', 'gwei'),
+            value: ethers.parseEther(escrow),
+            // chainId: ethers.utils.getNetwork('ropsten').chainId
         }
         try {
+            console.log('Joining Game')
             const tx = await contractWithSigner.joinGame(gameId, overrides)
             const minnedTx = await tx.wait()
             isThisPlayer1 = false
@@ -458,7 +464,7 @@ async function handleClick(event) {
             console.log('WINNER')
             try {
                 const flatSign = await signer.signMessage(cell.id)
-                const expSign = ethers.utils.splitSignature(flatSign)
+                const expSign = Signature.from(flatSign)
                 socket.emit('claim-victory', {
                     gameId: gameId,
                     isThisPlayer1: isThisPlayer1,
@@ -478,7 +484,7 @@ async function handleClick(event) {
             console.log('DRAW')
             try {
                 const flatSign = await signer.signMessage(cell.id)
-                const expSign = ethers.utils.splitSignature(flatSign)
+                const expSign = Signature.from(flatSign)
                 socket.emit('declare-draw', {
                     gameId: gameId,
                     isThisPlayer1: isThisPlayer1,
@@ -499,7 +505,7 @@ async function handleClick(event) {
             try {
                 // signer = await provider.getSigner()
                 const flatSign = await signer.signMessage(cell.id)
-                const expSign = ethers.utils.splitSignature(flatSign)
+                const expSign = Signature.from(flatSign)
                 socket.emit('move-made', {
                     gameId: gameId,
                     isThisPlayer1: isThisPlayer1,
