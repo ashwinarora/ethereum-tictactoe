@@ -127,6 +127,7 @@ async function deployContract() {
 }
 
 io.on('connection', function(socket){
+    console.log('a user connected')
     socket.on('request-contract-data', () => {
         // you may want to remore bytecode below as it probably won't be used in index.js.
         // if you decide to remove bytecode from index.js, make sure you remove it from everywhere
