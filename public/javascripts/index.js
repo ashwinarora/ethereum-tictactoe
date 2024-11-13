@@ -1,6 +1,6 @@
 // const socket = io.connect('https://eth-tictactoe.herokuapp.com')
 // const socket = io.connect('https://ethereum-tictactoe-diq84fqds-ashwins-projects-bfcbe243.vercel.app/')
-const socket = io.connect('https://ethereum-tictactoe.vercel.app/')
+const socket = io.connect('https://ethereum-tictactoe.vercel.app:5000')
 // const socket = socketIOClient('eth-tictactoe.herokuapp.com:80') // never worked
 import { ethers, Signature  } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.min.js";
 // const socket = io.connect('http://localhost:5000');

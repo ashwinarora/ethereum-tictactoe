@@ -126,8 +126,6 @@ async function deployContract() {
     }
 }
 
-
-
 io.on('connection', function(socket){
     socket.on('request-contract-data', () => {
         // you may want to remore bytecode below as it probably won't be used in index.js.
