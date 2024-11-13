@@ -121,21 +121,9 @@ async function deployContract() {
     try{
         gameNumber = parseInt(await contract.getNumberOfGames())
         console.log({gameNumber})
-        await testCall()
     } catch (err) {
         console.log(err)
     }
-}
-
-const testCall = async () => {
-    console.log("Testing Call")
-    const gameId = 9
-    const contractWithSigner = contract.connect(signer)
-    
-    // console.log(signer)
-    const tx = await contractWithSigner.endGame(gameId, player1Wins)
-    await tx.wait()
-    
 }
 
 
