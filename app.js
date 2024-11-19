@@ -123,7 +123,7 @@ async function deployContract() {
         console.log(err)
     }
 }
-console.log(io)
+
 io.on('connection', function(socket){
     console.log('a user connected')
     socket.on('request-contract-data', () => {
