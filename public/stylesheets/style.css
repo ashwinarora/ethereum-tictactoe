@@ -1,8 +1,42 @@
+/* Error / fallback pages rendered through the Pug layout */
 body {
-  padding: 50px;
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+  margin: 0;
+  min-height: 100vh;
+  padding: 50px 24px;
+  font: 16px/1.55 "Nunito", ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #f3f0ff;
+  background-color: #0d0a1f;
+  background-image:
+    radial-gradient(60rem 36rem at 15% -10%, rgba(124, 58, 237, 0.35), transparent 60%),
+    radial-gradient(50rem 30rem at 110% 20%, rgba(34, 211, 238, 0.16), transparent 60%),
+    linear-gradient(180deg, #0d0a1f, #17123a);
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem;
+}
+
+h2 {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #a9a3c9;
+  margin: 0 0 1.25rem;
+}
+
+pre {
+  padding: 1rem 1.25rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #d8ccff;
+  overflow-x: auto;
+  font-size: 0.85rem;
 }
 
 a {
-  color: #00B7FF;
+  color: #22d3ee;
 }
