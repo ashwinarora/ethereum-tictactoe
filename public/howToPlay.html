@@ -10,11 +10,14 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="stylesheets/index.css">
     <title>How to Play?</title>
+    <!-- nc:no-contact-only -->
+    <meta name="robots" content="noindex, nofollow">
+    <!-- nc:end -->
 </head>
 <body>
     <div class="container">
         <nav class="navbar navbar-expand-sm bg-dark navbar-dark fixed-top">
-            <a class="navbar-brand" href="https://www.ethtictactoe.com/">Ethereum TicTacToe</a>
+            <a class="navbar-brand" href="{{nc:homeUrl}}">Ethereum TicTacToe</a>
             <ul class="navbar-nav">
                 <li class="nav-item">
                     <a class="nav-link" href="#">How to Play?</a>
@@ -33,15 +36,19 @@
                 <li class="nav-item hidden">
                     <a class="nav-link" href="#">About</a>
                 </li>
+                <!-- nc:normal-only -->
                 <li class="nav-item hidden">
                     <a class="nav-link" href="#">Contact</a>
                 </li>
+                <!-- nc:end -->
             </ul>
+            <!-- nc:normal-only -->
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item">
                     <a class="nav-link" href="https://www.ethtictactoe.com/hireTheDev.html">Hire the Developer!</a>
                 </li>
             </ul>
+            <!-- nc:end -->
         </nav>
         
         <div id="howToPlay" class="container-fluid game-over">
@@ -49,6 +56,7 @@
                 <div class="col-12">
                     <h1 class="display-6">How to Play?</h1>
                 </div>
+                <!-- nc:normal-only -->
                 <div class="row">
                     <div class="col-1"></div>
                     <div class="col-10">
@@ -56,6 +64,7 @@
                     </div>
                     <div class="col-1"></div>
                 </div>
+                <!-- nc:end -->
                 <div class="row">
                     <div class="col-1"></div>
                     <div class="col-10">
@@ -82,8 +91,10 @@
                                     </div>
                                     <div class="tab-pane fade" id="list-self" role="tabpanel" aria-labelledby="list-self-list">
                                         <ol>
+                                            <!-- nc:normal-only -->
                                             <li>Since this is only a protfolio project, chances are that you are here to checkout the developer talent and not actually bet your ETH.</li>
-                                            <li>Simply open this in another tab, you can click <a href="https://www.ethtictactoe.com/" target="_blank">here.</a></li>
+                                            <li>Simply open this in another tab, you can click <a href="{{nc:homeUrl}}" target="_blank">here.</a></li>
+                                            <!-- nc:end -->
                                             <li>Play as player 1 in one tab by creating a new game.</li>
                                             <li>Play as player 2 in the other tab by joining the game.</li>
                                         </ol>
@@ -131,6 +142,7 @@
                 </div>
             </div>
         </div>
+        <!-- nc:normal-only -->
 
         <nav class="navbar navbar-expand-sm bg-dark navbar-dark fixed-bottom">
             <div class="logo-div">
@@ -148,6 +160,7 @@
                 </li>
             </ul>
         </nav>
+        <!-- nc:end -->
     </div>
 </body>
 </html>
