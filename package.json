@@ -5,7 +5,8 @@
   "scripts": {
     "start": "node app.js",
     "devstart": "nodemon ./bin/www",
-    "serverstart": "DEBUG=ethereum-tictactoe:* npm run devstart"
+    "serverstart": "DEBUG=ethereum-tictactoe:* npm run devstart",
+    "check:no-contact": "node scripts/check-no-contact.mjs"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
@@ -15,6 +16,7 @@
     "express": "~4.16.1",
     "helmet": "^3.23.0",
     "http-errors": "~1.6.3",
+    "http-proxy": "^1.18.1",
     "morgan": "~1.9.1",
     "pug": "3.0.1",
     "socket.io": "^2.3.0",

@@ -1,10 +1,12 @@
 import { ethers, Signature  } from "https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.min.js";
-const socket = io.connect('https://web-production-fc9f.up.railway.app/');
+const socket = io.connect('{{nc:socketUrl}}');
+// nc:normal-only
 // const socket = io.connect('http://localhost:5000');
 // const socket = io.connect('https://eth-tictactoe.herokuapp.com')
 // const socket = io.connect('https://ethereum-tictactoe-diq84fqds-ashwins-projects-bfcbe243.vercel.app/')
 // const socket = io.connect('https://ethereum-tictactoe.vercel.app:5000')
 // const socket = socketIOClient('eth-tictactoe.herokuapp.com:80') // never worked
+// nc:end
 
 let provider
 const hiddenClass = 'hidden'
@@ -26,7 +28,9 @@ let isThisPlayer1
 connectToMetamask()
 
 function connectToMetamask() {
+    // nc:normal-only
     console.log("Hey There, I'm glad to see your interest in my tech. To book a call with me simply write a mail to contact@ashwinarora.com with the subject line-'I opened console of ET3'. Cheers!" )
+    // nc:end
     if (window.ethereum) {
         const metamaskButton = document.getElementById('metamask-button')
         metamaskButton.classList.remove(hiddenClass)

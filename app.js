@@ -7,6 +7,10 @@ var helmet =  require('helmet')
 const ethers = require('ethers');
 const contractData = require('./contractData.js');
 require('dotenv').config()
+// Read after dotenv, so a local .env can set NO_CONTACT. See README "No-contact mode".
+const noContact = require('./noContact');
+const NO_CONTACT = noContact.NO_CONTACT
+const buildSite = require('./buildSite');
 
 let PORT
 
@@ -24,11 +28,24 @@ var usersRouter = require('./routes/users');
 
 var app = express();
 app.use(helmet());
+if (NO_CONTACT) {
+    app.locals.robots = noContact.ROBOTS
+    app.use(function (req, res, next) {
+        res.setHeader('X-Robots-Tag', noContact.ROBOTS);
+        next();
+    });
+}
 const server = app.listen(PORT, () => {
     console.log("Listening on PORT: " + PORT);
 });
 
-const io = require('socket.io')(server);
+// No-contact mode has no game engine: /socket.io goes to the production game server.
+let io
+if (NO_CONTACT) {
+    require('./socketProxy')(app, server, noContact.BACKEND_URL);
+} else {
+    io = require('socket.io')(server);
+}
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -38,7 +55,13 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+// public/ is the source and is never served itself: the copy for this mode is built here.
+app.use(express.static(buildSite({
+    sourceDir: noContact.SOURCE_DIR,
+    outDir: noContact.SERVED_DIR,
+    noContact: NO_CONTACT,
+    tokens: noContact.siteUrls,
+})));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
@@ -52,7 +75,8 @@ app.use(function (req, res, next) {
 app.use(function (err, req, res, next) {
     // set locals, only providing error in development
     res.locals.message = err.message;
-    res.locals.error = req.app.get('env') === 'development' ? err : {};
+    // never in no-contact mode: the stack trace shows the paths of the server's files
+    res.locals.error = req.app.get('env') === 'development' && !NO_CONTACT ? err : {};
 
     // render the error page
     res.status(err.status || 500);
@@ -60,6 +84,13 @@ app.use(function (err, req, res, next) {
 });
 
 //-----------code after this-------------
+
+// No-contact mode stops here. Everything below is the game engine, which only the normal
+// deployment runs: a second engine on the same contract and wallet would break both.
+if (NO_CONTACT) {
+    module.exports = app;
+    return;
+}
 
 // const provider = ethers.getDefaultProvider('ropsten');
 const provider = new ethers.providers.JsonRpcProvider('https://data-seed-prebsc-2-s2.bnbchain.org:8545');
